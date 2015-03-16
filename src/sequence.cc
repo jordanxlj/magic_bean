@@ -26,7 +26,11 @@ int64_t Sequence::IncrementAndGet() {
 
 int64_t Sequence::AddAndGet(int64_t increment) {
   int64_t current_value, new_value;
-  return 0;
+  current_value = value_.load(std::memory_order::memory_order_relaxed);
+  do {
+    new_value = current_value + increment;
+  } while(!value_.compare_exchange_weak(current_value, new_value));
+  return new_value;
 }
 
 } //end namespace
