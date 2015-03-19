@@ -5,6 +5,7 @@ namespace magic_bean {
 
 class SequenceBarrier {
  public:
+  virtual ~SequenceBarrier() {};
   virtual int64_t WaitFor(int64_t sequence) throw (AlertException, TimeoutException) = 0;
 
   virtual int64_t GetCursor() const = 0;
