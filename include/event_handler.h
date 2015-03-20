@@ -1,6 +1,8 @@
 #ifndef EVENT_HANDLER_H_
 #define EVENT_HANDLER_H_
 
+#include <cstdint>
+
 namespace magic_bean {
 
 template<typename T>

@@ -1,6 +1,8 @@
 #ifndef SEQUENCED_H_
 #define SEQUENCED_H_
 
+#include <cstdint>
+
 namespace magic_bean {
 
 class Sequenced {
