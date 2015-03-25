@@ -2,11 +2,11 @@
 #define EVENT_POLL_H_
 
 #include "data_provider.h"
+#include "magic_types.h"
 
 namespace magic_bean {
 
 class EventHandler;
-class Sequence;
 class Sequencer;
 
 template<typename T>
@@ -18,20 +18,20 @@ class EventPoller {
     IDLING
   };
   explicit EventPoller(DataProvider<T>* data_provider, Sequencer* sequencer,
-                       Sequence& sequence, Sequence& gating_sequence);
+                       SequencePtr sequence, Sequence& gating_sequence);
   ~EventPoller();
 
   PollState Poll(EventHandler<T>* event_handler);
   static EventPoller<T>* NewInstance(Data_provider<T>* data_provider, Sequencer* sequencer,
-                                     Sequence& sequence, Sequence& cursor_sequence,
+                                     SequencePtr sequence, SequencePtr cursor_sequence,
                                      std::vector<SequencePtr>& gating_sequences);
   SequencePtr GetSequence();
 
  private:
   DataProvider<T>* data_provider_;
   Sequencer* sequencer_;
-  Sequence& sequence_;
-  Sequence& gating_sequence_;
+  SequencePtr sequence_;
+  SequencePtr gating_sequence_;
 };
 
 template<typename T>
