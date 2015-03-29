@@ -27,7 +27,7 @@ class EventPoller {
   PollState Poll(EventHandler<T>* event_handler);
   static EventPoller<T>* NewInstance(DataProvider<T>* data_provider, Sequencer* sequencer,
                                      SequencePtr sequence, SequencePtr cursor_sequence,
-                                     std::vector<SequencePtr>& gating_sequences);
+                                     const std::vector<SequencePtr>& gating_sequences);
   SequencePtr GetSequence();
 
  private:
@@ -78,7 +78,7 @@ template<typename T>
   EventPoller<T>* EventPoller<T>::NewInstance(DataProvider<T>* data_provider,
                                               Sequencer* sequencer, SequencePtr sequence,
                                               SequencePtr cursor_sequence,
-                                              std::vector<SequencePtr>& gating_sequences) {
+                                              const std::vector<SequencePtr>& gating_sequences) {
   SequencePtr gating_sequence;
   if(gating_sequences.size() == 0) {
     gating_sequence = cursor_sequence;

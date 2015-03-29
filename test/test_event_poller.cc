@@ -13,6 +13,11 @@ class MockDataProvider : public DataProvider<int64_t> {
   MOCK_METHOD1(Get, int64_t*(int64_t));
 };
 
+class MockEventHandler : public EventHandler<int64_t> {
+ public:
+  MOCK_METHOD3(OnEvent, void(const int64_t&, int64_t, bool));
+};
+
 class MockSequencer : public Sequencer {
  public:
   MockSequencer(){};
@@ -51,5 +56,25 @@ TEST(test_event_poller, should_poll_for_events) {
     .WillOnce(Return(-1))
     .WillOnce(Return(0))
     .WillOnce(Return(0));
+
+  EXPECT_CALL(*sequencer, GetHighestPublishedSequence(0, -1))
+    .WillOnce(Return(-1));
+
+  EXPECT_CALL(*sequencer, GetHighestPublishedSequence(0, 0))
+    .WillOnce(Return(0));
+
+  int64_t* event = new int64_t(100);
+  MockDataProvider* provider = new MockDataProvider();
+  EXPECT_CALL(*provider, Get(0))
+    .WillOnce(Return(event));
+
+  SequencePtr poll_sequence = SequencePtr(new Sequence());
+  SequencePtr buffer_sequence = SequencePtr(new Sequence());
+  SequencePtr gating_sequence = SequencePtr(new Sequence());
+  std::vector<SequencePtr> gating_sequences;
+  gating_sequences.push_back(gating_sequence);
+  EventPoller<int64_t>* poller = EventPoller<int64_t>::NewInstance(provider, sequencer,
+                                                                  poll_sequence, buffer_sequence,
+                                                                  gating_sequences);
 
 }
