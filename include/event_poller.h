@@ -2,27 +2,30 @@
 #define EVENT_POLL_H_
 
 #include "data_provider.h"
+#include "event_handler.h"
 #include "magic_types.h"
+#include "sequence.h"
+#include "sequencer.h"
 
 namespace magic_bean {
 
-class EventHandler;
-class Sequencer;
+//class Sequencer;
+
+enum class PollState {
+  PROCESSING,
+  GATING,
+  IDLE
+};
 
 template<typename T>
 class EventPoller {
  public:
-  enum PollState {
-    PROCESSING,
-    GATING,
-    IDLING
-  };
   explicit EventPoller(DataProvider<T>* data_provider, Sequencer* sequencer,
-                       SequencePtr sequence, Sequence& gating_sequence);
+                       SequencePtr sequence, SequencePtr gating_sequence);
   ~EventPoller();
 
   PollState Poll(EventHandler<T>* event_handler);
-  static EventPoller<T>* NewInstance(Data_provider<T>* data_provider, Sequencer* sequencer,
+  static EventPoller<T>* NewInstance(DataProvider<T>* data_provider, Sequencer* sequencer,
                                      SequencePtr sequence, SequencePtr cursor_sequence,
                                      std::vector<SequencePtr>& gating_sequences);
   SequencePtr GetSequence();
@@ -46,7 +49,7 @@ template<typename T>
   PollState EventPoller<T>::Poll(EventHandler<T>* event_handler) {
   int64_t current_sequence = sequence_->Get();
   int64_t next_sequence = current_sequence + 1;
-  int64_t available_sequence = sequencer_->GetHighestPublishedSequence(next_sequence);
+  int64_t available_sequence = sequencer_->GetHighestPublishedSequence(next_sequence, gating_sequence_->Get());
 
   if(next_sequence <= available_sequence) {
     bool process_next_event;
@@ -59,14 +62,39 @@ template<typename T>
         next_sequence++;
       }
       while(next_sequence <= available_sequence && process_next_event);
-    } finally {
-      sequence->Set(processed_sequence);
+    } catch(...) {
+
     }
-    return PROCESSING;
-  } else if(sequencer->GetCursor() >= next_sequence) {
-    return GATING;
+
+    sequence_->Set(processed_sequence);
+    return PollState::PROCESSING;
+  } else if(sequencer_->GetCursor() >= next_sequence) {
+    return PollState::GATING;
   } else
-    return IDLE;
+    return PollState::IDLE;
+}
+
+template<typename T>
+  EventPoller<T>* EventPoller<T>::NewInstance(DataProvider<T>* data_provider,
+                                              Sequencer* sequencer, SequencePtr sequence,
+                                              SequencePtr cursor_sequence,
+                                              std::vector<SequencePtr>& gating_sequences) {
+  SequencePtr gating_sequence;
+  if(gating_sequences.size() == 0) {
+    gating_sequence = cursor_sequence;
+  } else if(gating_sequences.size() == 1) {
+    gating_sequence = gating_sequences[0];
+  } else {
+  }
+
+  return new EventPoller<T>(data_provider, sequencer, sequence, gating_sequence);
+}
+
+template<typename T>
+  SequencePtr EventPoller<T>::GetSequence() {
+  return sequence_;
+}
+
 } //end namespace
 
 #endif //EVENT_POLL_H_

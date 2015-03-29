@@ -2,6 +2,7 @@
 #define SEQUENCED_H_
 
 #include <cstdint>
+#include "insufficient_capacity_exception.h"
 
 namespace magic_bean {
 
@@ -16,8 +17,8 @@ class Sequenced {
   virtual int64_t Next() = 0;
   virtual int64_t Next(int n) = 0;
 
-  virtual int64_t TryNext() throw InsufficientCapacityException = 0;
-  virtual int64_t TryNext(int n) throw InsufficientCapacityException = 0;
+  virtual int64_t TryNext() throw (InsufficientCapacityException) = 0;
+  virtual int64_t TryNext(int n) throw (InsufficientCapacityException) = 0;
 
   virtual void Publish(int64_t sequence) = 0;
   virtual void Publish(int64_t lo, int64_t hi) = 0;
