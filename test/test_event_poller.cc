@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "event_poller.h"
-#include "event_handler.h"
 #include "sequence.h"
 
 using namespace magic_bean;
@@ -13,9 +12,9 @@ class MockDataProvider : public DataProvider<int64_t> {
   MOCK_METHOD1(Get, int64_t*(int64_t));
 };
 
-class MockEventHandler : public EventHandler<int64_t> {
+class MockHandler : public Handler<int64_t> {
  public:
-  MOCK_METHOD3(OnEvent, void(const int64_t&, int64_t, bool));
+  MOCK_METHOD3(OnEvent, bool(int64_t*, int64_t, bool));
 };
 
 class MockSequencer : public Sequencer {
@@ -77,4 +76,14 @@ TEST(test_event_poller, should_poll_for_events) {
                                                                   poll_sequence, buffer_sequence,
                                                                   gating_sequences);
 
+  MockHandler* handler = new MockHandler();
+  //Initial State - nothing published
+  ASSERT_EQ(poller->Poll(handler), PollState::IDLE);
+
+  //Publish Event
+  buffer_sequence->IncrementAndGet();
+  ASSERT_EQ(poller->Poll(handler), PollState::GATING);
+
+  gating_sequence->IncrementAndGet();
+  ASSERT_EQ(poller->Poll(handler), PollState::PROCESSING);
 }

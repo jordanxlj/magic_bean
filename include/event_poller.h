@@ -12,9 +12,16 @@ namespace magic_bean {
 //class Sequencer;
 
 enum class PollState {
-  PROCESSING,
+  PROCESSING = 0,
   GATING,
   IDLE
+};
+
+template<typename T>
+class Handler {
+ public:
+  virtual ~Handler() {};
+  virtual bool OnEvent(T* event, int64_t sequence, bool end_of_batch) = 0;
 };
 
 template<typename T>
@@ -24,7 +31,7 @@ class EventPoller {
                        SequencePtr sequence, SequencePtr gating_sequence);
   ~EventPoller();
 
-  PollState Poll(EventHandler<T>* event_handler);
+  PollState Poll(Handler<T>* handler);
   static EventPoller<T>* NewInstance(DataProvider<T>* data_provider, Sequencer* sequencer,
                                      SequencePtr sequence, SequencePtr cursor_sequence,
                                      const std::vector<SequencePtr>& gating_sequences);
@@ -46,7 +53,7 @@ template<typename T>
   , gating_sequence_(gating_sequence) {}
 
 template<typename T>
-  PollState EventPoller<T>::Poll(EventHandler<T>* event_handler) {
+  PollState EventPoller<T>::Poll(Handler<T>* handler) {
   int64_t current_sequence = sequence_->Get();
   int64_t next_sequence = current_sequence + 1;
   int64_t available_sequence = sequencer_->GetHighestPublishedSequence(next_sequence, gating_sequence_->Get());
@@ -57,7 +64,7 @@ template<typename T>
     try {
       do {
         T* event = data_provider_->Get(next_sequence);
-        process_next_event = event_handler->OnEvent(event, next_sequence, next_sequence == available_sequence);
+        process_next_event = handler->OnEvent(event, next_sequence, next_sequence == available_sequence);
         processed_sequence = next_sequence;
         next_sequence++;
       }
