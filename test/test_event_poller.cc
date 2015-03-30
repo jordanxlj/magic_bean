@@ -51,15 +51,16 @@ class MockSequencer : public Sequencer {
 TEST(test_event_poller, should_poll_for_events) {
   MockSequencer* sequencer = new MockSequencer();
   EXPECT_CALL(*sequencer, GetCursor())
-    .Times(3)
     .WillOnce(Return(-1))
-    .WillOnce(Return(0))
     .WillOnce(Return(0));
 
   EXPECT_CALL(*sequencer, GetHighestPublishedSequence(0, -1))
+    .Times(2)
+    .WillOnce(Return(-1))
     .WillOnce(Return(-1));
 
   EXPECT_CALL(*sequencer, GetHighestPublishedSequence(0, 0))
+    .Times(1)
     .WillOnce(Return(0));
 
   int64_t* event = new int64_t(100);
@@ -77,13 +78,21 @@ TEST(test_event_poller, should_poll_for_events) {
                                                                   gating_sequences);
 
   MockHandler* handler = new MockHandler();
+  EXPECT_CALL(*handler, OnEvent(event, 0, true));
+
   //Initial State - nothing published
   ASSERT_EQ(poller->Poll(handler), PollState::IDLE);
 
   //Publish Event
   buffer_sequence->IncrementAndGet();
+  ASSERT_EQ(buffer_sequence->Get(), 0);
   ASSERT_EQ(poller->Poll(handler), PollState::GATING);
 
   gating_sequence->IncrementAndGet();
   ASSERT_EQ(poller->Poll(handler), PollState::PROCESSING);
+
+  delete handler;
+  delete poller;
+  delete sequencer;
+  delete provider;
 }

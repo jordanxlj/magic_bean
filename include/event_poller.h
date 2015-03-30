@@ -29,7 +29,7 @@ class EventPoller {
  public:
   explicit EventPoller(DataProvider<T>* data_provider, Sequencer* sequencer,
                        SequencePtr sequence, SequencePtr gating_sequence);
-  ~EventPoller();
+  ~EventPoller() {};
 
   PollState Poll(Handler<T>* handler);
   static EventPoller<T>* NewInstance(DataProvider<T>* data_provider, Sequencer* sequencer,
@@ -56,8 +56,10 @@ template<typename T>
   PollState EventPoller<T>::Poll(Handler<T>* handler) {
   int64_t current_sequence = sequence_->Get();
   int64_t next_sequence = current_sequence + 1;
+  std::cout << "current sequence : " << current_sequence << ", next_sequence : " << next_sequence << std::endl;
+  std::cout << "gating sequence : " << gating_sequence_->Get() << std::endl;
   int64_t available_sequence = sequencer_->GetHighestPublishedSequence(next_sequence, gating_sequence_->Get());
-
+  std::cout << "available :" << available_sequence << std::endl;
   if(next_sequence <= available_sequence) {
     bool process_next_event;
     int64_t processed_sequence = current_sequence;
@@ -77,8 +79,9 @@ template<typename T>
     return PollState::PROCESSING;
   } else if(sequencer_->GetCursor() >= next_sequence) {
     return PollState::GATING;
-  } else
+  } else {
     return PollState::IDLE;
+  }
 }
 
 template<typename T>
@@ -87,6 +90,7 @@ template<typename T>
                                               SequencePtr cursor_sequence,
                                               const std::vector<SequencePtr>& gating_sequences) {
   SequencePtr gating_sequence;
+  std::cout << "size :" << gating_sequences.size() << std::endl;
   if(gating_sequences.size() == 0) {
     gating_sequence = cursor_sequence;
   } else if(gating_sequences.size() == 1) {
