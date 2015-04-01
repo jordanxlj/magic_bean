@@ -1,6 +1,9 @@
 #ifndef SEQUENCE_BARRIER_H_
 #define SEQUENCE_BARRIER_H_
 
+#include "alert_exception.h"
+#include "timeout_exception.h"
+
 namespace magic_bean {
 
 class SequenceBarrier {
@@ -14,7 +17,7 @@ class SequenceBarrier {
   virtual void Alert() = 0;
 
   virtual void ClearAlert() = 0;
-  virtual CheckAlert() throw AlertException = 0;
+  virtual void CheckAlert() throw (AlertException) = 0;
 };
 
 } //end namespace
