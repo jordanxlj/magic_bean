@@ -48,8 +48,29 @@ class MockSequencer : public Sequencer {
   MOCK_METHOD2(GetHighestPublishedSequence, int64_t(int64_t, int64_t));
 };
 
-TEST(test_event_poller, should_poll_for_events) {
-  MockSequencer* sequencer = new MockSequencer();
+class EventPollerTest : public ::testing::Test {
+ protected:
+  virtual void SetUp() {
+    sequencer = new MockSequencer();
+    provider = new MockDataProvider();
+    handler = new MockHandler();
+    event = new int64_t(100);
+  }
+
+  virtual void TearDown() {
+    delete event;
+    delete handler;
+    delete provider;
+    delete sequencer;
+  }
+
+  MockSequencer* sequencer;
+  MockDataProvider* provider;
+  MockHandler* handler;
+  int64_t* event;
+};
+
+TEST_F(EventPollerTest, should_poll_for_events) {
   EXPECT_CALL(*sequencer, GetCursor())
     .WillOnce(Return(-1))
     .WillOnce(Return(0));
@@ -63,8 +84,6 @@ TEST(test_event_poller, should_poll_for_events) {
     .Times(1)
     .WillOnce(Return(0));
 
-  int64_t* event = new int64_t(100);
-  MockDataProvider* provider = new MockDataProvider();
   EXPECT_CALL(*provider, Get(0))
     .WillOnce(Return(event));
 
@@ -77,7 +96,6 @@ TEST(test_event_poller, should_poll_for_events) {
                                                                   poll_sequence, buffer_sequence,
                                                                   gating_sequences);
 
-  MockHandler* handler = new MockHandler();
   EXPECT_CALL(*handler, OnEvent(event, 0, true));
 
   //Initial State - nothing published
@@ -90,9 +108,4 @@ TEST(test_event_poller, should_poll_for_events) {
 
   gating_sequence->IncrementAndGet();
   ASSERT_EQ(poller->Poll(handler), PollState::PROCESSING);
-
-  delete handler;
-  delete poller;
-  delete sequencer;
-  delete provider;
 }
