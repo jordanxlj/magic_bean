@@ -13,7 +13,7 @@ class WaitStrategy{
  public:
   virtual ~WaitStrategy() {};
 
-  virtual int64_t WaitFor(int64_t sequence, SequencePtr cursor, Sequence dependent_sequence,
+  virtual int64_t WaitFor(int64_t sequence, SequencePtr cursor, SequencePtr dependent_sequence,
                           SequenceBarrier* barrier) throw (AlertException, TimeoutException) = 0;
   virtual void SignalAllWhenBlocking() = 0;
 };

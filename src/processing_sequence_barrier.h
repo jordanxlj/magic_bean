@@ -2,8 +2,8 @@
 #define PROCESSING_SEQUENCE_BARRIER_H_
 
 #include <vector>
-#include "magic_types.h"
-#include "sequence_barrier.h"
+#include <magic_types.h>
+#include <sequence_barrier.h>
 
 namespace magic_bean {
 
@@ -29,7 +29,7 @@ class ProcessingSequenceBarrier : public SequenceBarrier {
   WaitStrategy* wait_strategy_;
   SequencePtr cursor_sequence_;
   SequencePtr dependent_sequence_;
-  bool alerted_;
+  volatile bool alerted_;
 };
 
 } //end namespace

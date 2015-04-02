@@ -1,5 +1,6 @@
 #include "processing_sequence_barrier.h"
-#include "wait_strategy.h"
+#include <sequencer.h>
+#include <wait_strategy.h>
 
 namespace magic_bean {
 
@@ -20,11 +21,18 @@ ProcessingSequenceBarrier::~ProcessingSequenceBarrier() {
 }
 
 int64_t ProcessingSequenceBarrier::WaitFor(int64_t sequence) throw (AlertException, TimeoutException) {
-  return 0;
+  CheckAlert();
+  int64_t available_sequence = wait_strategy_->WaitFor(sequence, cursor_sequence_,
+                                                       dependent_sequence_,
+                                                       static_cast<SequenceBarrier*>(this));
+  if(available_sequence < sequence)
+    return available_sequence;
+
+  return sequencer_->GetHighestPublishedSequence(sequence, available_sequence);
 }
 
 int64_t ProcessingSequenceBarrier::GetCursor() const {
-  return 0;
+  return dependent_sequence_->Get();
 }
 
 bool ProcessingSequenceBarrier::IsAlerted() const {
