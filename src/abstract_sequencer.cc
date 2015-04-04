@@ -1,5 +1,6 @@
 #include "abstract_sequencer.h"
 #include <wait_strategy.h>
+#include "processing_sequence_barrier.h"
 
 namespace magic_bean {
 
@@ -24,6 +25,10 @@ void AbstractSequencer::AddGatingSequences(const std::vector<SequencePtr>& gatin
 
 bool AbstractSequencer::RemoveGatingSequence(SequencePtr gating_sequence) {
   return false;
+}
+
+SequenceBarrier* AbstractSequencer::NewBarrier(const std::vector<SequencePtr>& sequences_to_track) {
+  return new ProcessingSequenceBarrier(this, wait_strategy_, cursor_, sequences_to_track);
 }
 
 int64_t AbstractSequencer::GetMinimumSequence() const {

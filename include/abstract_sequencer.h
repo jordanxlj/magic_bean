@@ -20,6 +20,8 @@ class AbstractSequencer : public Sequencer {
 
   virtual void AddGatingSequences(const std::vector<SequencePtr>& gating_sequences) override;
   virtual bool RemoveGatingSequence(SequencePtr gating_sequence) override;
+  virtual SequenceBarrier* NewBarrier(const std::vector<SequencePtr>& sequences_to_track) override;
+
   virtual int64_t GetMinimumSequence() const override;
 
   template<typename T>
