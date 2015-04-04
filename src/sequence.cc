@@ -12,6 +12,8 @@ Sequence::Sequence(int64_t initial_value) {
   value_.store(initial_value);
 }
 
+Sequence::~Sequence() {}
+
 int64_t Sequence::Get() const {
   return value_.load(std::memory_order::memory_order_acquire);
 }

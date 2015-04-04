@@ -9,8 +9,6 @@
 
 namespace magic_bean {
 
-//class Sequencer;
-
 enum class PollState {
   PROCESSING = 0,
   GATING,

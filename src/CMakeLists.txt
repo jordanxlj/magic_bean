@@ -1,5 +1,5 @@
 include_directories(${PROJECT_SOURCE_DIR}/include)
-set(SRC sequence.cc processing_sequence_barrier.cc yielding_wait_strategy.cc)
+set(SRC sequence.cc processing_sequence_barrier.cc yielding_wait_strategy.cc abstract_sequencer.cc)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/..)
 add_library(libmagic SHARED ${SRC})
 set_target_properties(libmagic PROPERTIES OUTPUT_NAME "magic")

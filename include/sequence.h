@@ -25,6 +25,7 @@ class Sequence : public RhsPadding {
  public:
   Sequence();
   Sequence(int64_t initial_value);
+  ~Sequence();
 
   int64_t Get() const;
   void Set(int64_t value);

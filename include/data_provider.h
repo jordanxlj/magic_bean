@@ -1,6 +1,8 @@
 #ifndef DATA_PROVIDER_H_
 #define DATA_PROVIDER_H_
 
+#include <cstdint>
+
 namespace magic_bean {
 
 template<typename T>

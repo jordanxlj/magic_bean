@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "event_poller.h"
-#include "sequence.h"
+#include <event_poller.h>
+#include <sequence.h>
+#include <sequence_barrier.h>
 
 using namespace magic_bean;
 
@@ -44,6 +45,7 @@ class MockSequencer : public Sequencer {
 
   MOCK_METHOD1(AddGatingSequences, void(const std::vector<SequencePtr>&));
   MOCK_METHOD1(RemoveGatingSequence, bool(SequencePtr));
+  MOCK_METHOD1(NewBarrier, SequenceBarrier*(const std::vector<SequencePtr>&));
   MOCK_CONST_METHOD0(GetMinimumSequence, int64_t());
   MOCK_METHOD2(GetHighestPublishedSequence, int64_t(int64_t, int64_t));
 };
