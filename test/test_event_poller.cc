@@ -24,7 +24,8 @@ class MockSequencer : public Sequencer {
 
   MOCK_METHOD0(GetCursor, int64_t());
   MOCK_CONST_METHOD0(GetBufferSize, int());
-  MOCK_CONST_METHOD1(HasAvailableCapacity, bool(int));
+
+  MOCK_METHOD1(HasAvailableCapacity, bool(int));
   MOCK_CONST_METHOD0(RemainingCapacity, int64_t());
 
   MOCK_METHOD0(Next, int64_t());

@@ -7,7 +7,7 @@ namespace magic_bean{
 
 class InsufficientCapacityException {
  public:
-  explicit InsufficientCapacityException(const std::string& msg);
+  explicit InsufficientCapacityException(const std::string& msg) {};
 };
 
 } //end namespace

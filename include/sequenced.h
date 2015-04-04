@@ -11,7 +11,7 @@ class Sequenced {
   virtual ~Sequenced() {};
 
   virtual int GetBufferSize() const = 0;
-  virtual bool HasAvailableCapacity(int required_capacity) const = 0;
+  virtual bool HasAvailableCapacity(int required_capacity) = 0;
   virtual int64_t RemainingCapacity() const = 0;
 
   virtual int64_t Next() = 0;
