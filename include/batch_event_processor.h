@@ -7,6 +7,8 @@
 #include "sequence.h"
 #include "sequence_barrier.h"
 
+namespace magic_bean {
+
 template<typename T>
 class BatchEventProcessor : public EventProcessor {
  public:
@@ -108,5 +110,6 @@ template<typename T>
 void BatchEventProcessor<T>::NotifyShutdown() {
 }
 
+} //end namespace
 
 #end //BATCH_EVENT_PROCESSOR_H_
