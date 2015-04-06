@@ -2,10 +2,10 @@
 #define SEQUENCER_H_
 
 #include <vector>
-#include <cursored.h>
-#include <magic_types.h>
-#include <sequence.h>
-#include <sequenced.h>
+#include "cursored.h"
+#include "magic_types.h"
+#include "sequence.h"
+#include "sequenced.h"
 
 namespace magic_bean {
 
