@@ -17,6 +17,7 @@ class BlockingWaitStrategy : public WaitStrategy {
                           SequencePtr dependent_sequence, SequenceBarrier* barrier)
     throw (AlertException, TimeoutException) override;
   virtual void SignalAllWhenBlocking() override;
+
  private:
   std::recursive_mutex mutex_;
   std::condition_variable_any cond_;
