@@ -10,7 +10,9 @@ AbstractSequencer::AbstractSequencer(int buffer_size, WaitStrategy* wait_strateg
   , cursor_(new Sequence) {
 }
 
-AbstractSequencer::~AbstractSequencer() {}
+AbstractSequencer::~AbstractSequencer() {
+  cursor_.reset();
+}
 
 int64_t AbstractSequencer::GetCursor() {
   return cursor_->Get();

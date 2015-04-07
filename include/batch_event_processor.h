@@ -2,7 +2,10 @@
 #define BATCH_EVENT_PROCESSOR_H_
 
 #include <atomic>
+#include <stdexcept>
+#include "data_provider.h"
 #include "event_handler.h"
+#include "event_processor.h"
 #include "magic_types.h"
 #include "sequence.h"
 #include "sequence_barrier.h"
@@ -21,10 +24,12 @@ class BatchEventProcessor : public EventProcessor {
   virtual void Halt() override;
   virtual bool IsRunning() override;
   virtual void Run() override;
+
  private:
   void NotifyTimeout(int64_t available_sequence);
   void NotifyStart();
   void NotifyShutdown();
+
  private:
   DataProvider<T>* data_provider_;
   SequenceBarrier* sequence_barrier_;
@@ -35,8 +40,8 @@ class BatchEventProcessor : public EventProcessor {
 
 template<typename T>
 BatchEventProcessor<T>::BatchEventProcessor(DataProvider<T>* data_provider,
-                                         SequenceBarrier* barrier,
-                                         EventHandler<T>* event_handler)
+                                            SequenceBarrier* barrier,
+                                            EventHandler<T>* event_handler)
   : data_provider_(data_provider)
   , sequence_barrier_(barrier)
   , event_handler_(event_handler)
@@ -54,19 +59,22 @@ SequencePtr BatchEventProcessor<T>::GetSequence() {
 
 template<typename T>
 void BatchEventProcessor<T>::Halt() {
-  running_.store(false, std::memory_order::memory_order_relax);
+  running_.store(false, std::memory_order::memory_order_relaxed);
   sequence_barrier_->Alert();
 }
 
 template<typename T>
 bool BatchEventProcessor<T>::IsRunning() {
-  return running_.load(std::memory_order::memory_order_relax);
+  return running_.load(std::memory_order::memory_order_relaxed);
 }
 
 template<typename T>
 void BatchEventProcessor<T>::Run() {
-  if(!running_.compare_exchange_weak(fasle, true))
-    throw runtime_error("Thread is already running");
+  bool running = false;
+  if(!running_.compare_exchange_weak(running, true)) {
+    std::string msg("Thread is already running");
+    throw runtime_error(msg);
+  }
 
   sequence_barrier_->ClearAlert();
   NotifyStart();
@@ -86,16 +94,17 @@ void BatchEventProcessor<T>::Run() {
       } catch (TimeoutException& e) {
         NotifyTimeout(sequence_->Get());
       } catch (AlertException& e) {
-        if(!running_.load(std::memory_order::memory_order_relax))
+        if(!running_.load(std::memory_order::memory_order_relaxed))
           break;
       } catch (...) {
         sequence_->Set(next_sequence);
         next_sequence++;
       }
     }
+  } catch (...) {
   }
   NotifyShutdown();
-  running_.store(false, std::memory_order::memory_order_relax);
+  running_.store(false, std::memory_order::memory_order_relaxed);
 }
 
 template<typename T>
@@ -112,4 +121,4 @@ void BatchEventProcessor<T>::NotifyShutdown() {
 
 } //end namespace
 
-#end //BATCH_EVENT_PROCESSOR_H_
+#endif //BATCH_EVENT_PROCESSOR_H_

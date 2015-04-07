@@ -1,8 +1,8 @@
+#include "event_poller.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <event_poller.h>
-#include <sequence.h>
-#include <sequence_barrier.h>
+#include "sequence.h"
+#include "sequence_barrier.h"
 
 using namespace magic_bean;
 
