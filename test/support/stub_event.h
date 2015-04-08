@@ -3,9 +3,12 @@
 
 #include "event_factory.h"
 
+using namespace magic_bean;
+
 class StubEvent {
  public:
-  explicit StubEvent(int i) : value_(i) {};
+  StubEvent(int i) : value_(i) {};
+  StubEvent() : value_(-1) {};
   int GetValue() const { return value_; };
   void SetValue(int value) { value_ = value; };
 
@@ -18,7 +21,7 @@ class StubEventFactory : public EventFactory<StubEvent> {
   StubEventFactory() {};
   ~StubEventFactory() {};
 
-  virtual StubEvent* NewInstance override {
+  virtual StubEvent* NewInstance() override {
     return new StubEvent(-1);
   };
 };

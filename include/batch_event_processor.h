@@ -72,8 +72,7 @@ template<typename T>
 void BatchEventProcessor<T>::Run() {
   bool running = false;
   if(!running_.compare_exchange_weak(running, true)) {
-    std::string msg("Thread is already running");
-    throw runtime_error(msg);
+    //throw runtime_error("Thread is already running");
   }
 
   sequence_barrier_->ClearAlert();

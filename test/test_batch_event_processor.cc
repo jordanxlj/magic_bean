@@ -1,6 +1,8 @@
 #include "batch_event_processor.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "ring_buffer.h"
+#include "sequence_barrier.h"
 #include "support/stub_event.h"
 
 using namespace magic_bean;
