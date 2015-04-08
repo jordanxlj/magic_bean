@@ -12,6 +12,7 @@ class EventProcessor {
   virtual SequencePtr GetSequence() = 0;
   virtual void Halt() = 0;
   virtual bool IsRunning() = 0;
+  virtual void Run() = 0;
 };
 
 } //end namespace
