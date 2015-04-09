@@ -80,28 +80,27 @@ void BatchEventProcessor<T>::Run() {
 
   T* event = nullptr;
   int64_t next_sequence = sequence_->Get() + 1;
-  try {
-    while(true) {
-      try {
-        int64_t available_sequence = sequence_barrier_->WaitFor(next_sequence);
-        while(next_sequence <= available_sequence) {
-          event = data_provider_->Get(next_sequence);
-          event_handler_->OnEvent(event, next_sequence, next_sequence == available_sequence);
-          next_sequence++;
-        }
-        sequence_->Set(available_sequence);
-      } catch (TimeoutException& e) {
-        NotifyTimeout(sequence_->Get());
-      } catch (AlertException& e) {
-        if(!running_.load(std::memory_order::memory_order_relaxed))
-          break;
-      } catch (...) {
-        sequence_->Set(next_sequence);
+
+  while(true) {
+    try {
+      int64_t available_sequence = sequence_barrier_->WaitFor(next_sequence);
+      while(next_sequence <= available_sequence) {
+        event = data_provider_->Get(next_sequence);
+        event_handler_->OnEvent(event, next_sequence, next_sequence == available_sequence);
         next_sequence++;
       }
+      sequence_->Set(available_sequence);
+    } catch (TimeoutException& e) {
+      NotifyTimeout(sequence_->Get());
+    } catch (AlertException& e) {
+      if(!running_.load(std::memory_order::memory_order_relaxed))
+        break;
+    } catch (...) {
+      sequence_->Set(next_sequence);
+      next_sequence++;
     }
-  } catch (...) {
   }
+
   NotifyShutdown();
   running_.store(false, std::memory_order::memory_order_relaxed);
 }

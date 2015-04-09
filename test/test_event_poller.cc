@@ -5,7 +5,6 @@
 #include "sequence_barrier.h"
 
 using namespace magic_bean;
-
 using ::testing::Return;
 
 class MockDataProvider : public DataProvider<int64_t> {
