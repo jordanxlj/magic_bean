@@ -7,8 +7,7 @@ namespace magic_bean {
 AbstractSequencer::AbstractSequencer(int buffer_size, WaitStrategy* wait_strategy)
   : buffer_size_(buffer_size)
   , wait_strategy_(wait_strategy)
-  , cursor_(new Sequence) {
-}
+  , cursor_(new Sequence) {}
 
 AbstractSequencer::~AbstractSequencer() {
   cursor_.reset();

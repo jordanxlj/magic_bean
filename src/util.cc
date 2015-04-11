@@ -13,7 +13,7 @@ int64_t Util::GetMinimumSequence(const std::vector<SequencePtr>& sequences, int6
 
 int Util::Log2(int i) {
   int r = 0;
-  while((i >> 1) != 0)
+  while((i >>= 1) != 0)
     ++r;
   return r;
 }

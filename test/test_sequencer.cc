@@ -4,6 +4,7 @@
 #include <gmock/gmock.h>
 #include "blocking_wait_strategy.h"
 #include "sequence.h"
+#include <stdio.h>
 
 using namespace magic_bean;
 using namespace ::testing;
@@ -17,13 +18,14 @@ class SequencerTest : public TestWithParam<int> {
  protected:
   SequencerTest() {
     producer_type = GetParam();
+    printf("producer type : %d\n", producer_type);
   }
   virtual ~SequencerTest() {};
- protected:
+
   virtual void SetUp() {
     wait_strategy = new BlockingWaitStrategy();
     sequencer = NewProducer(producer_type, wait_strategy);
-    gating_sequence = SequencePtr(new Sequence());
+    //gating_sequence = SequencePtr(new Sequence());
   }
   virtual void TearDown() {
     gating_sequence.reset();
@@ -48,4 +50,8 @@ class SequencerTest : public TestWithParam<int> {
   static const int BUFFER_SIZE = 16;
 };
 
-INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, Range(1, 2));
+TEST_P(SequencerTest, should_start_with_initial_value) {
+  ASSERT_EQ(0, sequencer->Next());
+}
+
+INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, Range(0, 2));
