@@ -1,5 +1,5 @@
-#ifndef SINGLE_PRODUCER_SEQUENCER_H_
-#define SINGLE_PRODUCER_SEQUENCER_H_
+#ifndef MULTI_PRODUCER_SEQUENCER_H_
+#define MULTI_PRODUCER_SEQUENCER_H_
 
 #include "abstract_sequencer.h"
 
@@ -7,27 +7,10 @@ namespace magic_bean {
 
 class InsufficientCapacityException;
 
-class SingleProducerSequencerPad : public AbstractSequencer {
+class MultiProducerSequencer : public AbstractSequencer {
  public:
-  SingleProducerSequencerPad(int buffer_size, WaitStrategy* wait_strategy);
-  virtual ~SingleProducerSequencerPad() {};
-
- protected:
-  int64_t p1, p2, p3, p4, p5, p6, p7;
-};
-
-class SingleProducerSequencerFields : public SingleProducerSequencerPad {
- public:
-  SingleProducerSequencerFields(int buffer_size, WaitStrategy* wait_strategy);
- protected:
-  int64_t next_value_;
-  int64_t cached_value_;
-};
-
-class SingleProducerSequencer : public SingleProducerSequencerFields {
- public:
-  explicit SingleProducerSequencer(int buffer_size, WaitStrategy* wait_strategy);
-  ~SingleProducerSequencer();
+  explicit MultiProducerSequencer(int buffer_size, WaitStrategy* wait_strategy);
+  ~MultiProducerSequencer();
 
   virtual bool HasAvailableCapacity(int required_capacity) override;
 
@@ -46,10 +29,22 @@ class SingleProducerSequencer : public SingleProducerSequencerFields {
   virtual bool IsAvailable(int64_t sequence) override;
   virtual int64_t GetHighestPublishedSequence(int64_t next_sequence,
                                               int64_t available_sequence) override;
- protected:
-  int64_t p1, p2, p3, p4, p5, p6, p7;
+ private:
+  bool HasAvailableCapacity(const std::vector<SequencePtr>& gating_sequences,
+                            int required_capacity, int64_t cursor_value);
+  void InitializeAvailableBuffer();
+  void SetAvailable(int64_t sequence);
+  void SetAvailableBufferValue(int index, int flag);
+  int CalculateAvailabilityFlag(int64_t sequence);
+  int CalculateIndex(int64_t sequence);
+
+ private:
+  SequencePtr gating_sequence_cache_;
+  int* available_buffer_;
+  int index_mask_;
+  int index_shift_;
 };
 
 } //end namespace
 
-#endif //SINGLE_PRODUCER_SEQUENCER_H_
+#endif //MULTI_PRODUCER_SEQUENCER_H_

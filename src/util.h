@@ -9,6 +9,7 @@ namespace magic_bean {
 class Util {
  public:
   static int64_t GetMinimumSequence(const std::vector<SequencePtr>& sequences, int64_t minimum);
+  static int Log2(int i);
 };
 
 } //end namespace

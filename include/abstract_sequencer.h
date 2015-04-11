@@ -2,9 +2,9 @@
 #define ABSTRACT_SEQUENCER_H_
 
 #include <vector>
-#include <event_poller.h>
-#include <magic_types.h>
-#include <sequencer.h>
+#include "event_poller.h"
+#include "magic_types.h"
+#include "sequencer.h"
 
 namespace magic_bean {
 

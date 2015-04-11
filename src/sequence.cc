@@ -22,6 +22,10 @@ void Sequence::Set(int64_t value) {
   value_.store(value, std::memory_order::memory_order_release);
 }
 
+bool Sequence:: CompareAndSet(int64_t expected_value, int64_t new_value) {
+  return value_.compare_exchange_weak(expected_value, new_value);
+}
+
 int64_t Sequence::IncrementAndGet() {
   return AddAndGet(1L);
 }

@@ -30,6 +30,7 @@ class Sequence : public RhsPadding {
   int64_t Get() const;
   void Set(int64_t value);
 
+  bool CompareAndSet(int64_t expected_value, int64_t new_value);
   int64_t IncrementAndGet();
   int64_t AddAndGet(int64_t increment);
 };
