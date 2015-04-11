@@ -22,7 +22,7 @@ void MultiProducerSequencer::InitializeAvailableBuffer() {
 }
 
 void MultiProducerSequencer::SetAvailableBufferValue(int index, int flag) {
-
+  available_buffer_[index] = flag;
 }
 
 
@@ -31,7 +31,20 @@ MultiProducerSequencer::~MultiProducerSequencer() {
 }
 
 bool MultiProducerSequencer::HasAvailableCapacity(int required_capacity) {
-  return false;
+  return HasAvailableCapacity(gating_sequences_, required_capacity, cursor_->Get());
+}
+
+bool MultiProducerSequencer::HasAvailableCapacity(const std::vector<SequencePtr>& gating_sequences,
+                                                  int required_capacity, int64_t cursor_value) {
+  int64_t wrap_point = (cursor_value + required_capacity) - buffer_size_;
+  int64_t cached_gating_sequence = gating_sequence_cache_->Get();
+  if(wrap_point > cached_gating_sequence || cached_gating_sequence > cursor_value) {
+    int64_t min_sequence = Util::GetMinimumSequence(gating_sequences_, cursor_value);
+    gating_sequence_cache_->Set(min_sequence);
+    if(wrap_point > min_sequence)
+      return false;
+  }
+  return true;
 }
 
 int64_t MultiProducerSequencer::Next() {
@@ -119,7 +132,7 @@ int MultiProducerSequencer::CalculateIndex(int64_t sequence) {
 bool MultiProducerSequencer::IsAvailable(int64_t sequence) {
   int index = CalculateIndex(sequence);
   int flag = CalculateAvailabilityFlag(sequence);
-  available_buffer_[index] = flag;
+  return available_buffer_[index] == flag;
 }
 
 int64_t MultiProducerSequencer::GetHighestPublishedSequence(int64_t low_bound,
@@ -129,19 +142,6 @@ int64_t MultiProducerSequencer::GetHighestPublishedSequence(int64_t low_bound,
       return sequence - 1;
 
   return available_sequence;
-}
-
-bool MultiProducerSequencer::HasAvailableCapacity(const std::vector<SequencePtr>& gating_sequences,
-                                                  int required_capacity, int64_t cursor_value) {
-  int64_t wrap_point = (cursor_value + required_capacity) - buffer_size_;
-  int64_t cached_gating_sequence = gating_sequence_cache_->Get();
-  if(wrap_point > cached_gating_sequence || cached_gating_sequence > cursor_value) {
-    int64_t min_sequence = Util::GetMinimumSequence(gating_sequences_, cursor_value);
-    gating_sequence_cache_->Set(min_sequence);
-    if(wrap_point > min_sequence)
-      return false;
-  }
-  return true;
 }
 
 } //end namespace
