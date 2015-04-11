@@ -4,28 +4,25 @@
 #include <gmock/gmock.h>
 #include "blocking_wait_strategy.h"
 #include "sequence.h"
-#include <stdio.h>
 
 using namespace magic_bean;
-using namespace ::testing;
 
 enum ProducerType {
   SINGLE,
   MULTI
 };
 
-class SequencerTest : public TestWithParam<int> {
+class SequencerTest : public ::testing::TestWithParam<int> {
  protected:
   SequencerTest() {
     producer_type = GetParam();
-    printf("producer type : %d\n", producer_type);
   }
   virtual ~SequencerTest() {};
 
   virtual void SetUp() {
     wait_strategy = new BlockingWaitStrategy();
     sequencer = NewProducer(producer_type, wait_strategy);
-    //gating_sequence = SequencePtr(new Sequence());
+    gating_sequence = SequencePtr(new Sequence());
   }
   virtual void TearDown() {
     gating_sequence.reset();
@@ -44,9 +41,8 @@ class SequencerTest : public TestWithParam<int> {
  protected:
   int producer_type;
   Sequencer* sequencer;
-  SequencePtr gating_sequence;
   WaitStrategy* wait_strategy;
- private:
+  SequencePtr gating_sequence;
   static const int BUFFER_SIZE = 16;
 };
 
@@ -54,4 +50,21 @@ TEST_P(SequencerTest, should_start_with_initial_value) {
   ASSERT_EQ(0, sequencer->Next());
 }
 
-INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, Range(0, 2));
+TEST_P(SequencerTest, should_batch_claim) {
+  ASSERT_EQ(3, sequencer->Next(4));
+}
+
+TEST_P(SequencerTest, should_indicate_has_available_capacity) {
+  std::vector<SequencePtr> gating_sequences;
+  gating_sequences.push_back(gating_sequence);
+
+  ASSERT_TRUE(sequencer->HasAvailableCapacity(1));
+  ASSERT_TRUE(sequencer->HasAvailableCapacity(BUFFER_SIZE));
+  ASSERT_FALSE(sequencer->HasAvailableCapacity(BUFFER_SIZE + 1));
+
+  sequencer->Publish(sequencer->Next());
+  ASSERT_TRUE(sequencer->HasAvailableCapacity(BUFFER_SIZE - 1));
+  ASSERT_FALSE(sequencer->HasAvailableCapacity(BUFFER_SIZE));
+}
+
+INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
