@@ -30,8 +30,7 @@ class MultiProducerSequencer : public AbstractSequencer {
   virtual int64_t GetHighestPublishedSequence(int64_t next_sequence,
                                               int64_t available_sequence) override;
  private:
-  bool HasAvailableCapacity(const std::vector<SequencePtr>& gating_sequences,
-                            int required_capacity, int64_t cursor_value);
+  bool HasAvailableCapacity(int required_capacity, int64_t cursor_value);
   void InitializeAvailableBuffer();
   void SetAvailable(int64_t sequence);
   void SetAvailableBufferValue(int index, int flag);

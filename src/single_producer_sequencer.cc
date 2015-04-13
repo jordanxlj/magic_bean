@@ -1,8 +1,9 @@
 #include "single_producer_sequencer.h"
 #include <stdexcept>
 #include "insufficient_capacity_exception.h"
+#include "sequence_groups.h"
 #include "wait_strategy.h"
-#include "util.h"
+#include <iostream>
 
 namespace magic_bean {
 
@@ -29,14 +30,17 @@ bool SingleProducerSequencer::HasAvailableCapacity(int required_capacity) {
   int64_t wrap_point = (next_value + required_capacity) - buffer_size_;
   int64_t cached_gating_sequence = cached_value_;
 
+
   if(wrap_point > cached_gating_sequence || cached_gating_sequence > next_value) {
-    int64_t min_sequence = Util::GetMinimumSequence(gating_sequences_, next_value);
+    int64_t min_sequence = GetMinimumSequence(next_value);
     cached_value_ = min_sequence;
 
+    std::cout << "required: "<< required_capacity << ", wrap: " << wrap_point << ", cached: " << cached_gating_sequence << ", next: " << next_value << ", min: " << min_sequence << std::endl;
     if(wrap_point > min_sequence)
       return false;
   }
 
+  std::cout << "required: " << required_capacity << ", wrap: " << wrap_point << ", cached: " << cached_gating_sequence << ", next: " << next_value << std::endl;
   return true;
 }
 
@@ -55,7 +59,7 @@ int64_t SingleProducerSequencer::Next(int n) {
 
   if(wrap_point > cached_gating_sequence || cached_gating_sequence > next_value) {
     int64_t min_sequence;
-    while(wrap_point > (min_sequence = Util::GetMinimumSequence(gating_sequences_, next_value)))
+    while(wrap_point > (min_sequence = GetMinimumSequence(next_value)))
       ;
     cached_value_ = min_sequence;
   }
@@ -80,7 +84,7 @@ int64_t SingleProducerSequencer::TryNext(int n) throw (InsufficientCapacityExcep
 
 int64_t SingleProducerSequencer::RemainingCapacity() const {
   int64_t next_value = next_value_;
-  int64_t consumed = Util::GetMinimumSequence(gating_sequences_, next_value);
+  int64_t consumed = GetMinimumSequence(next_value);
   int64_t produced = next_value;
   return GetBufferSize() - (produced - consumed);
 }

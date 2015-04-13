@@ -9,6 +9,7 @@
 namespace magic_bean {
 
 class WaitStrategy;
+class SequenceGroups;
 
 class AbstractSequencer : public Sequencer {
  public:
@@ -23,6 +24,7 @@ class AbstractSequencer : public Sequencer {
   virtual SequenceBarrier* NewBarrier(const std::vector<SequencePtr>& sequences_to_track) override;
 
   virtual int64_t GetMinimumSequence() const override;
+  int64_t GetMinimumSequence(int64_t minimum) const;
 
   template<typename T>
     EventPoller<T> NewPoller(DataProvider<T>* provider,
@@ -31,7 +33,7 @@ class AbstractSequencer : public Sequencer {
   int buffer_size_;
   WaitStrategy* wait_strategy_;
   SequencePtr cursor_;
-  std::vector<SequencePtr> gating_sequences_;
+  SequenceGroups* sequence_groups_;
 };
 
 } //end namespace

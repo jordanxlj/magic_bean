@@ -1,6 +1,7 @@
 #include "multi_producer_sequencer.h"
 #include <stdexcept>
 #include "insufficient_capacity_exception.h"
+#include "sequence_groups.h"
 #include "wait_strategy.h"
 #include "util.h"
 
@@ -31,15 +32,14 @@ MultiProducerSequencer::~MultiProducerSequencer() {
 }
 
 bool MultiProducerSequencer::HasAvailableCapacity(int required_capacity) {
-  return HasAvailableCapacity(gating_sequences_, required_capacity, cursor_->Get());
+  return HasAvailableCapacity(required_capacity, cursor_->Get());
 }
 
-bool MultiProducerSequencer::HasAvailableCapacity(const std::vector<SequencePtr>& gating_sequences,
-                                                  int required_capacity, int64_t cursor_value) {
+bool MultiProducerSequencer::HasAvailableCapacity(int required_capacity, int64_t cursor_value) {
   int64_t wrap_point = (cursor_value + required_capacity) - buffer_size_;
   int64_t cached_gating_sequence = gating_sequence_cache_->Get();
   if(wrap_point > cached_gating_sequence || cached_gating_sequence > cursor_value) {
-    int64_t min_sequence = Util::GetMinimumSequence(gating_sequences_, cursor_value);
+    int64_t min_sequence = GetMinimumSequence(cursor_value);
     gating_sequence_cache_->Set(min_sequence);
     if(wrap_point > min_sequence)
       return false;
@@ -64,7 +64,7 @@ int64_t MultiProducerSequencer::Next(int n) {
     int64_t cached_gating_sequence = gating_sequence_cache_->Get();
 
     if(wrap_point > cached_gating_sequence || cached_gating_sequence > current) {
-      int64_t gating_sequence = Util::GetMinimumSequence(gating_sequences_, current);
+      int64_t gating_sequence = GetMinimumSequence(current);
       if(wrap_point > gating_sequence)
         continue;
 
@@ -89,7 +89,7 @@ int64_t MultiProducerSequencer::TryNext(int n) throw (InsufficientCapacityExcept
     current = cursor_->Get();
     next = current + n;
 
-    if(!HasAvailableCapacity(gating_sequences_, n, current))
+    if(!HasAvailableCapacity(n, current))
       throw InsufficientCapacityException("not has available capacity");
   } while (!cursor_->CompareAndSet(current, next));
 
@@ -97,7 +97,7 @@ int64_t MultiProducerSequencer::TryNext(int n) throw (InsufficientCapacityExcept
 }
 
 int64_t MultiProducerSequencer::RemainingCapacity() const {
-  int64_t consumed = Util::GetMinimumSequence(gating_sequences_, cursor_->Get());
+  int64_t consumed = GetMinimumSequence(cursor_->Get());
   int64_t produced = cursor_->Get();
   return GetBufferSize() - (produced - consumed);
 }

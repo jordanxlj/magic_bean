@@ -1,13 +1,15 @@
 #include "abstract_sequencer.h"
 #include <wait_strategy.h>
 #include "processing_sequence_barrier.h"
+#include "sequence_groups.h"
 
 namespace magic_bean {
 
 AbstractSequencer::AbstractSequencer(int buffer_size, WaitStrategy* wait_strategy)
   : buffer_size_(buffer_size)
   , wait_strategy_(wait_strategy)
-  , cursor_(new Sequence) {}
+  , cursor_(new Sequence)
+  , sequence_groups_(new SequenceGroups) {}
 
 AbstractSequencer::~AbstractSequencer() {
   cursor_.reset();
@@ -22,10 +24,11 @@ int AbstractSequencer::GetBufferSize() const {
 }
 
 void AbstractSequencer::AddGatingSequences(const std::vector<SequencePtr>& gating_sequences) {
+  sequence_groups_->AddSequences(this, gating_sequences);
 }
 
 bool AbstractSequencer::RemoveGatingSequence(SequencePtr gating_sequence) {
-  return false;
+  return sequence_groups_->RemoveSequence(gating_sequence);
 }
 
 SequenceBarrier* AbstractSequencer::NewBarrier(const std::vector<SequencePtr>& sequences_to_track) {
@@ -33,7 +36,11 @@ SequenceBarrier* AbstractSequencer::NewBarrier(const std::vector<SequencePtr>& s
 }
 
 int64_t AbstractSequencer::GetMinimumSequence() const {
-  return 0;
+  return sequence_groups_->GetMinimumSequence(cursor_->Get());
+}
+
+int64_t AbstractSequencer::GetMinimumSequence(int64_t minimum) const {
+  return sequence_groups_->GetMinimumSequence(minimum);
 }
 
 template<typename T>
