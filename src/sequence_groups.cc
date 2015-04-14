@@ -34,9 +34,10 @@ bool SequenceGroups::RemoveSequence(SequencePtr sequence) {
   if(p && p->sequence == sequence
      && std::atomic_compare_exchange_strong_explicit(&head_, &p, p->next,
                                                      std::memory_order_acquire,
-                                                     std::memory_order_relaxed))
+                                                     std::memory_order_relaxed)) {
+    p.reset();
     return true;
-  else
+  } else
     return false;
 }
 

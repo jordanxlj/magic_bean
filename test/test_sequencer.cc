@@ -57,6 +57,7 @@ TEST_P(SequencerTest, should_batch_claim) {
 TEST_P(SequencerTest, should_indicate_has_available_capacity) {
   std::vector<SequencePtr> gating_sequences;
   gating_sequences.push_back(gating_sequence);
+  sequencer->AddGatingSequences(gating_sequences);
 
   ASSERT_TRUE(sequencer->HasAvailableCapacity(1));
   ASSERT_TRUE(sequencer->HasAvailableCapacity(BUFFER_SIZE));
