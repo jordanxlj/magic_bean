@@ -115,6 +115,7 @@ TEST_P(SequencerTest, should_holdup_publisher_when_buffer_is_full) {
   done_cond.wait(done_lock);
 
   ASSERT_EQ(sequencer->GetCursor(), expected_full_sequence + 1);
+  thread.join();
 }
 
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
