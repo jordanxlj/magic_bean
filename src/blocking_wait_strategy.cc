@@ -14,13 +14,10 @@ int64_t BlockingWaitStrategy::WaitFor(int64_t sequence, SequencePtr cursor_seque
   int64_t available_sequence;
   if((available_sequence = cursor_sequence->Get()) < sequence) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    try {
-      while((available_sequence = cursor_sequence->Get()) < sequence) {
-        barrier->CheckAlert();
-        cond_.wait(lock);
-      }
+    while((available_sequence = cursor_sequence->Get()) < sequence) {
+      barrier->CheckAlert();
+      cond_.wait(lock);
     }
-    catch(...) {}
   }
 
   while((available_sequence = dependent_sequence->Get()) < sequence)

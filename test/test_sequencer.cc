@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include "blocking_wait_strategy.h"
 #include "sequence.h"
+#include "sequence_barrier.h"
 
 using namespace magic_bean;
 
@@ -175,7 +176,38 @@ TEST_P(SequencerTest, should_notify_wait_strategy_on_publish) {
 
   EXPECT_CALL(*wait_strategy, SignalAllWhenBlocking());
   sequencer->Publish(sequencer->Next());
+  delete sequencer;
   delete wait_strategy;
+}
+
+TEST_P(SequencerTest, should_notify_wait_strategy_on_publish_batch) {
+  MockWaitStrategy* wait_strategy = new MockWaitStrategy;
+  Sequenced* sequencer = NewProducer(producer_type, wait_strategy);
+
+  EXPECT_CALL(*wait_strategy, SignalAllWhenBlocking());
+  int64_t next = sequencer->Next(4);
+  sequencer->Publish(next - (4 - 1), next);
+  delete sequencer;
+  delete wait_strategy;
+}
+
+TEST_P(SequencerTest, should_wait_on_publication) {
+  std::vector<SequencePtr> sequences_to_track;
+  SequenceBarrier* barrier = sequencer->NewBarrier(sequences_to_track);
+  int64_t next = sequencer->Next(10);
+  int64_t lo = next - (10 - 1);
+  int64_t mid = next - 5;
+
+  for(int64_t l = lo; l < mid; l++)
+    sequencer->Publish(l);
+
+  ASSERT_EQ(barrier->WaitFor(-1), mid - 1);
+
+  for(int64_t l = mid; l <= next; l++)
+    sequencer->Publish(l);
+
+  ASSERT_EQ(barrier->WaitFor(-1), next);
+  delete barrier;
 }
 
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
