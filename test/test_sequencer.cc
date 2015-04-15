@@ -149,4 +149,15 @@ TEST_P(SequencerTest, should_calculate_remaining_capacity) {
   }
 }
 
+TEST_P(SequencerTest, should_not_be_available_until_published) {
+  int64_t next = sequencer->Next(6);
+  for(int i = 0; i <= 5; i++)
+    ASSERT_FALSE(sequencer->IsAvailable(i));
+
+  sequencer->Publish(next - (6 - 1), next);
+  for(int i = 0; i <= 5; i++)
+    ASSERT_TRUE(sequencer->IsAvailable(i));
+  ASSERT_FALSE(sequencer->IsAvailable(6));
+}
+
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
