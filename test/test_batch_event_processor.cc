@@ -20,6 +20,7 @@ class MockEventHandler : public EventHandler<StubEvent> {
 class BatchEventProcessorTest : public Test {
  public:
   void SignalAll(StubEvent*, int64_t, bool) {
+    std::unique_lock<std::mutex> lock(mutex);
     cond.notify_all();
   }
 

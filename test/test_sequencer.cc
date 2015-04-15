@@ -18,10 +18,16 @@ enum ProducerType {
 class SequencerTest : public ::testing::TestWithParam<int> {
  public:
   void Execute() {
-    waiting_cond.notify_all();
+    {
+      std::unique_lock<std::mutex> waiting_lock(waiting_mutex);
+      waiting_cond.notify_all();
+    }
     int64_t next = sequencer->Next();
     sequencer->Publish(next);
-    done_cond.notify_all();
+    {
+      std::unique_lock<std::mutex> done_lock(done_mutex);
+      done_cond.notify_all();
+    }
   }
  protected:
   SequencerTest() {
@@ -101,8 +107,8 @@ TEST_P(SequencerTest, should_holdup_publisher_when_buffer_is_full) {
   int64_t sequence = sequencer->Next(BUFFER_SIZE);
   sequencer->Publish(sequence - (BUFFER_SIZE - 1), sequence);
 
-  std::unique_lock<std::mutex> done_lock(done_mutex);
   std::unique_lock<std::mutex> waiting_lock(waiting_mutex);
+  std::unique_lock<std::mutex> done_lock(done_mutex);
 
   int64_t expected_full_sequence = INITIAL_CURSOR_VALUE + sequencer->GetBufferSize();
   ASSERT_EQ(sequencer->GetCursor(), expected_full_sequence);
@@ -116,6 +122,24 @@ TEST_P(SequencerTest, should_holdup_publisher_when_buffer_is_full) {
 
   ASSERT_EQ(sequencer->GetCursor(), expected_full_sequence + 1);
   thread.join();
+}
+
+TEST_P(SequencerTest, should_throw_insufficient_capacity_exception_when_sequencer_is_full) {
+  std::vector<SequencePtr> gating_sequences;
+  gating_sequences.push_back(gating_sequence);
+  sequencer->AddGatingSequences(gating_sequences);
+
+  for(int i = 0; i < BUFFER_SIZE; i++) {
+    sequencer->Next();
+  }
+
+  try {
+    sequencer->TryNext();
+  } catch(InsufficientCapacityException& ex) {
+    SUCCEED();
+  } catch(...) {
+    FAIL() << "Unexpected exception";
+  }
 }
 
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
