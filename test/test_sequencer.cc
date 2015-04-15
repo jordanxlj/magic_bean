@@ -15,6 +15,16 @@ enum ProducerType {
   MULTI
 };
 
+class MockWaitStrategy : public WaitStrategy {
+ public:
+  virtual int64_t WaitFor(int64_t sequence, SequencePtr cursor, SequencePtr dependent_sequence,
+                          SequenceBarrier* barrier) throw (AlertException, TimeoutException) override {
+    return 0;
+  }
+
+  MOCK_METHOD0(SignalAllWhenBlocking, void());
+};
+
 class SequencerTest : public ::testing::TestWithParam<int> {
  public:
   void Execute() {
@@ -48,7 +58,6 @@ class SequencerTest : public ::testing::TestWithParam<int> {
     delete wait_strategy;
   }
 
- private:
   Sequencer* NewProducer(int producer_type, WaitStrategy* strategy) {
     if(producer_type == ProducerType::SINGLE)
       return new SingleProducerSequencer(BUFFER_SIZE, strategy);
@@ -158,6 +167,15 @@ TEST_P(SequencerTest, should_not_be_available_until_published) {
   for(int i = 0; i <= 5; i++)
     ASSERT_TRUE(sequencer->IsAvailable(i));
   ASSERT_FALSE(sequencer->IsAvailable(6));
+}
+
+TEST_P(SequencerTest, should_notify_wait_strategy_on_publish) {
+  MockWaitStrategy* wait_strategy = new MockWaitStrategy;
+  Sequenced* sequencer = NewProducer(producer_type, wait_strategy);
+
+  EXPECT_CALL(*wait_strategy, SignalAllWhenBlocking());
+  sequencer->Publish(sequencer->Next());
+  delete wait_strategy;
 }
 
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
