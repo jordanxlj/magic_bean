@@ -39,8 +39,10 @@ class SequencerTest : public ::testing::TestWithParam<int> {
     wait_strategy = new BlockingWaitStrategy();
     sequencer = NewProducer(producer_type, wait_strategy);
     gating_sequence = SequencePtr(new Sequence());
+    gating_sequences.push_back(gating_sequence);
   }
   virtual void TearDown() {
+    gating_sequences.clear();
     gating_sequence.reset();
     delete sequencer;
     delete wait_strategy;
@@ -59,12 +61,15 @@ class SequencerTest : public ::testing::TestWithParam<int> {
   Sequencer* sequencer;
   WaitStrategy* wait_strategy;
   SequencePtr gating_sequence;
-  static const int BUFFER_SIZE = 16;
-  static const int64_t INITIAL_CURSOR_VALUE = -1;
+  std::vector<SequencePtr> gating_sequences;
+
   std::condition_variable waiting_cond;
   std::mutex waiting_mutex;
   std::condition_variable done_cond;
   std::mutex done_mutex;
+
+  static const int BUFFER_SIZE = 16;
+  static const int64_t INITIAL_CURSOR_VALUE = -1;
 };
 
 TEST_P(SequencerTest, should_start_with_initial_value) {
@@ -76,8 +81,6 @@ TEST_P(SequencerTest, should_batch_claim) {
 }
 
 TEST_P(SequencerTest, should_indicate_has_available_capacity) {
-  std::vector<SequencePtr> gating_sequences;
-  gating_sequences.push_back(gating_sequence);
   sequencer->AddGatingSequences(gating_sequences);
 
   ASSERT_TRUE(sequencer->HasAvailableCapacity(1));
@@ -90,8 +93,6 @@ TEST_P(SequencerTest, should_indicate_has_available_capacity) {
 }
 
 TEST_P(SequencerTest, should_indicate_no_available_capacity) {
-  std::vector<SequencePtr> gating_sequences;
-  gating_sequences.push_back(gating_sequence);
   sequencer->AddGatingSequences(gating_sequences);
 
   int64_t sequence = sequencer->Next(16);
@@ -100,8 +101,6 @@ TEST_P(SequencerTest, should_indicate_no_available_capacity) {
 }
 
 TEST_P(SequencerTest, should_holdup_publisher_when_buffer_is_full) {
-  std::vector<SequencePtr> gating_sequences;
-  gating_sequences.push_back(gating_sequence);
   sequencer->AddGatingSequences(gating_sequences);
 
   int64_t sequence = sequencer->Next(BUFFER_SIZE);
@@ -125,8 +124,6 @@ TEST_P(SequencerTest, should_holdup_publisher_when_buffer_is_full) {
 }
 
 TEST_P(SequencerTest, should_throw_insufficient_capacity_exception_when_sequencer_is_full) {
-  std::vector<SequencePtr> gating_sequences;
-  gating_sequences.push_back(gating_sequence);
   sequencer->AddGatingSequences(gating_sequences);
 
   for(int i = 0; i < BUFFER_SIZE; i++) {
@@ -140,6 +137,10 @@ TEST_P(SequencerTest, should_throw_insufficient_capacity_exception_when_sequence
   } catch(...) {
     FAIL() << "Unexpected exception";
   }
+}
+
+TEST_P(SequencerTest, should_calculate_remaining_capacity) {
+  sequencer->AddGatingSequences(gating_sequences);
 }
 
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
