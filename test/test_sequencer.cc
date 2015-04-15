@@ -141,6 +141,12 @@ TEST_P(SequencerTest, should_throw_insufficient_capacity_exception_when_sequence
 
 TEST_P(SequencerTest, should_calculate_remaining_capacity) {
   sequencer->AddGatingSequences(gating_sequences);
+  ASSERT_EQ(sequencer->RemainingCapacity(), int64_t(BUFFER_SIZE));
+
+  for(int i = 1; i < BUFFER_SIZE; i++) {
+    sequencer->Next();
+    ASSERT_EQ(sequencer->RemainingCapacity(), BUFFER_SIZE - i);
+  }
 }
 
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
