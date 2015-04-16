@@ -222,4 +222,11 @@ TEST_P(SequencerTest, should_try_next) {
   }
 }
 
+TEST_P(SequencerTest, should_claim_specific_sequence) {
+  int64_t sequence = 14;
+  sequencer->Claim(sequence);
+  sequencer->Publish(sequence);
+  ASSERT_EQ(sequencer->Next(), sequence + 1);
+}
+
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));
