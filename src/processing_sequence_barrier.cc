@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -16,8 +15,8 @@
  */
 
 #include "processing_sequence_barrier.h"
-#include <sequencer.h>
-#include <wait_strategy.h>
+#include "sequencer.h"
+#include "wait_strategy.h"
 
 namespace magic_bean {
 
@@ -27,7 +26,8 @@ ProcessingSequenceBarrier::ProcessingSequenceBarrier(Sequencer* sequencer,
                                                      const std::vector<SequencePtr>& dependent_sequences)
   : sequencer_(sequencer)
   , wait_strategy_(wait_strategy)
-  , cursor_sequence_(cursor_sequence) {
+  , cursor_sequence_(cursor_sequence)
+  , alerted_(false) {
   if(dependent_sequences.size() == 0) {
     dependent_sequence_ = cursor_sequence;
   } else {
@@ -66,8 +66,10 @@ void ProcessingSequenceBarrier::ClearAlert() {
 }
 
 void ProcessingSequenceBarrier::CheckAlert() throw (AlertException) {
-  if(alerted_)
+  if(alerted_) {
+    std::cout << "check alert exception" << std::endl;
     throw AlertException();
+  }
 }
 
 } //end namespace
