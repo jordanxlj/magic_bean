@@ -210,4 +210,16 @@ TEST_P(SequencerTest, should_wait_on_publication) {
   delete barrier;
 }
 
+TEST_P(SequencerTest, should_try_next) {
+  sequencer->AddGatingSequences(gating_sequences);
+  for(int i = 0; i < BUFFER_SIZE; i++)
+    sequencer->Publish(sequencer->TryNext());
+
+  try {
+    sequencer->TryNext();
+  } catch(InsufficientCapacityException& ex) {
+    SUCCEED();
+  }
+}
+
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));

@@ -67,7 +67,6 @@ void ProcessingSequenceBarrier::ClearAlert() {
 
 void ProcessingSequenceBarrier::CheckAlert() throw (AlertException) {
   if(alerted_) {
-    std::cout << "check alert exception" << std::endl;
     throw AlertException();
   }
 }
