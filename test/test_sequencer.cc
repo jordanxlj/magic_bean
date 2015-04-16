@@ -8,6 +8,7 @@
 #include "blocking_wait_strategy.h"
 #include "sequence.h"
 #include "sequence_barrier.h"
+#include "insufficient_capacity_exception.h"
 
 using namespace magic_bean;
 
@@ -227,6 +228,38 @@ TEST_P(SequencerTest, should_claim_specific_sequence) {
   sequencer->Claim(sequence);
   sequencer->Publish(sequence);
   ASSERT_EQ(sequencer->Next(), sequence + 1);
+}
+
+TEST_P(SequencerTest, should_not_allow_bulk_next_less_than_zero) {
+  try {
+    sequencer->Next(-1);
+  } catch(std::invalid_argument& ex) {
+    SUCCEED();
+  }
+}
+
+TEST_P(SequencerTest, should_not_allow_bulk_next_of_zero) {
+  try {
+    sequencer->Next(0);
+  } catch(std::invalid_argument& ex) {
+    SUCCEED();
+  }
+}
+
+TEST_P(SequencerTest, should_not_allow_bulk_try_next_less_than_zero) {
+  try {
+    sequencer->TryNext(-1);
+  } catch(std::invalid_argument& ex) {
+    SUCCEED();
+  }
+}
+
+TEST_P(SequencerTest, should_not_allow_bulk_try_next_of_zero) {
+  try {
+    sequencer->TryNext(0);
+  } catch(std::invalid_argument& ex) {
+    SUCCEED();
+  }
 }
 
 INSTANTIATE_TEST_CASE_P(AllProducerSequencerTest, SequencerTest, ::testing::Range(0, 2));

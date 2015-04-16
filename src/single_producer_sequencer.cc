@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -80,11 +79,11 @@ int64_t SingleProducerSequencer::Next(int n) {
   return next_sequence;
 }
 
-int64_t SingleProducerSequencer::TryNext() throw (InsufficientCapacityException) {
+int64_t SingleProducerSequencer::TryNext() {
   return TryNext(1);
 }
 
-int64_t SingleProducerSequencer::TryNext(int n) throw (InsufficientCapacityException) {
+int64_t SingleProducerSequencer::TryNext(int n) {
   if(n < 1)
     throw std::invalid_argument("try next n is invalid");
 

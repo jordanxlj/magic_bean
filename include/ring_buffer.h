@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -98,8 +97,8 @@ class RingBuffer : public RingBufferFields<T>, public Cursored, public DataProvi
   virtual int64_t Next() override;
   virtual int64_t Next(int n) override;
 
-  virtual int64_t TryNext() throw(InsufficientCapacityException) override;
-  virtual int64_t TryNext(int n) throw(InsufficientCapacityException) override;
+  virtual int64_t TryNext() override;
+  virtual int64_t TryNext(int n) override;
 
   T* ClaimAndGetPreallocated(int64_t sequence);
   bool IsPublished(int64_t sequence);
@@ -161,12 +160,12 @@ template<typename T>
 }
 
 template<typename T>
-  int64_t RingBuffer<T>::TryNext() throw(InsufficientCapacityException) {
+  int64_t RingBuffer<T>::TryNext() {
   return RingBufferFields<T>::sequencer_->TryNext();
 }
 
 template<typename T>
-  int64_t RingBuffer<T>::TryNext(int n) throw(InsufficientCapacityException) {
+  int64_t RingBuffer<T>::TryNext(int n) {
   return RingBufferFields<T>::sequencer_->TryNext(n);
 }
 

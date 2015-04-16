@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -21,8 +20,6 @@
 #include "abstract_sequencer.h"
 
 namespace magic_bean {
-
-class InsufficientCapacityException;
 
 class SingleProducerSequencerPad : public AbstractSequencer {
  public:
@@ -51,8 +48,8 @@ class SingleProducerSequencer : public SingleProducerSequencerFields {
   virtual int64_t Next() override;
   virtual int64_t Next(int n) override;
 
-  virtual int64_t TryNext() throw (InsufficientCapacityException) override;
-  virtual int64_t TryNext(int n) throw (InsufficientCapacityException) override;
+  virtual int64_t TryNext() override;
+  virtual int64_t TryNext(int n) override;
 
   virtual int64_t RemainingCapacity() const override;
 

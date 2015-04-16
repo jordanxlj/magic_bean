@@ -30,13 +30,8 @@ class MockSequencer : public Sequencer {
   MOCK_METHOD0(Next, int64_t());
   MOCK_METHOD1(Next, int64_t(int));
 
-  virtual int64_t TryNext() throw (InsufficientCapacityException) override {
-    return 0;
-  }
-
-  virtual int64_t TryNext(int) throw (InsufficientCapacityException) override {
-    return 0;
-  }
+  MOCK_METHOD0(TryNext, int64_t());
+  MOCK_METHOD1(TryNext, int64_t(int));
 
   MOCK_METHOD1(Publish, void(int64_t));
   MOCK_METHOD2(Publish, void(int64_t, int64_t));

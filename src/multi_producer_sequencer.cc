@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -93,11 +92,11 @@ int64_t MultiProducerSequencer::Next(int n) {
   return next;
 }
 
-int64_t MultiProducerSequencer::TryNext() throw (InsufficientCapacityException) {
+int64_t MultiProducerSequencer::TryNext() {
   return TryNext(1);
 }
 
-int64_t MultiProducerSequencer::TryNext(int n) throw (InsufficientCapacityException) {
+int64_t MultiProducerSequencer::TryNext(int n) {
   if(n < 1)
     throw std::invalid_argument("n must be > 0");
 
