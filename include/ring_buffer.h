@@ -22,6 +22,7 @@
 #include "data_provider.h"
 #include "event_factory.h"
 #include "event_poller.h"
+#include "event_translator_one_arg.h"
 #include "sequenced.h"
 #include "single_producer_sequencer.h"
 #include "multi_producer_sequencer.h"
@@ -122,6 +123,9 @@ class RingBuffer : public RingBufferFields<T>, public Cursored, public DataProvi
   virtual void Publish(int64_t lo, int64_t hi) override;
 
   virtual int64_t RemainingCapacity() const override;
+
+  template<typename A>
+    void PublishEvent(EventTranslatorOneArg<T, A>* translator, A arg0);
 
  protected:
   int64_t p1, p2, p3, p4, p5, p6, p7;
@@ -251,6 +255,14 @@ template<typename T>
 template<typename T>
   int64_t RingBuffer<T>::RemainingCapacity() const {
   return RingBufferFields<T>::sequencer_->RemainingCapacity();
+}
+
+template<typename T>
+template<typename A>
+  void RingBuffer<T>::PublishEvent(EventTranslatorOneArg<T, A>* translator, A arg0) {
+  int64_t sequence = RingBufferFields<T>::sequencer_->Next();
+  translator->TranslateTo(Get(sequence), sequence, arg0);
+  RingBufferFields<T>::sequencer_->Publish(sequence);
 }
 
 } //end namespace

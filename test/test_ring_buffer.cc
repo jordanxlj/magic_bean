@@ -38,7 +38,20 @@ class RingBufferTest : public ::testing::Test {
 
   SequencePtr gating_sequence;
   std::vector<SequencePtr> gating_sequences;
+
+  static const int64_t INITIAL_CURSOR_VALUE = -1;
 };
 
 TEST_F(RingBufferTest, should_claim_and_get) {
+  ASSERT_EQ(ring_buffer->GetCursor(), INITIAL_CURSOR_VALUE);
+  StubEvent* expected_event = new StubEvent(2701);
+  StubEventTranslator* translator = new StubEventTranslator;
+  ring_buffer->PublishEvent(translator, expected_event->GetValue());
+
+  int64_t sequence = sequence_barrier->WaitFor(0);
+  ASSERT_EQ(sequence, 0);
+
+  StubEvent* event = ring_buffer->Get(sequence);
+  ASSERT_EQ(event->GetValue(), expected_event->GetValue());
+  ASSERT_EQ(ring_buffer->GetCursor(), 0);
 }
