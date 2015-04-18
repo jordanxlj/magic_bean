@@ -44,14 +44,28 @@ class RingBufferTest : public ::testing::Test {
 
 TEST_F(RingBufferTest, should_claim_and_get) {
   ASSERT_EQ(ring_buffer->GetCursor(), INITIAL_CURSOR_VALUE);
-  StubEvent* expected_event = new StubEvent(2701);
-  StubEventTranslator* translator = new StubEventTranslator;
-  ring_buffer->PublishEvent(translator, expected_event->GetValue());
+  StubEvent expected_event(2701);
+  StubEventTranslator translator;
+  ring_buffer->PublishEvent(&translator, expected_event.GetValue());
 
   int64_t sequence = sequence_barrier->WaitFor(0);
   ASSERT_EQ(sequence, 0);
 
   StubEvent* event = ring_buffer->Get(sequence);
-  ASSERT_EQ(event->GetValue(), expected_event->GetValue());
+  ASSERT_EQ(event->GetValue(), expected_event.GetValue());
   ASSERT_EQ(ring_buffer->GetCursor(), 0);
+}
+
+TEST_F(RingBufferTest, should_claim_and_get_multiple_messages) {
+  StubEventTranslator translator;
+  int num_messages = ring_buffer->GetBufferSize();
+  for(int i = 0; i < num_messages; i++)
+    ring_buffer->PublishEvent(&translator, i);
+
+  int64_t expected_sequence = num_messages - 1;
+  int64_t available = sequence_barrier->WaitFor(expected_sequence);
+  ASSERT_EQ(expected_sequence, available);
+
+  for(int i = 0; i < num_messages; i++)
+    ASSERT_EQ(ring_buffer->Get(i)->GetValue(), i);
 }
