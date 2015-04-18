@@ -24,6 +24,7 @@
 #include "event_poller.h"
 #include "sequenced.h"
 #include "single_producer_sequencer.h"
+#include "multi_producer_sequencer.h"
 
 namespace magic_bean {
 
@@ -88,10 +89,13 @@ class RingBuffer : public RingBufferFields<T>, public Cursored, public DataProvi
  public:
   RingBuffer(EventFactory<T>* event_factory, Sequencer* sequencer);
   ~RingBuffer();
+  static RingBuffer<T>* CreateMultiProducer(EventFactory<T>* factory,
+                                            int buffer_size, WaitStrategy* wait_strategy);
+  static RingBuffer<T>* CreateMultiProducer(EventFactory<T>* factory, int buffer_size);
 
-  static RingBuffer<T>* CreateSingleProducer(EventFactory<T>* event_factory,
+  static RingBuffer<T>* CreateSingleProducer(EventFactory<T>* factory,
                                              int buffer_size, WaitStrategy* wait_strategy);
-  static RingBuffer<T>* CreateSingleProducer(EventFactory<T>* event_factory, int buffer_size);
+  static RingBuffer<T>* CreateSingleProducer(EventFactory<T>* factory, int buffer_size);
 
   virtual T* Get(int64_t sequence) override;
   virtual int64_t Next() override;
@@ -129,6 +133,20 @@ template<typename T>
 
 template<typename T>
   RingBuffer<T>::~RingBuffer() {}
+
+template<typename T>
+  RingBuffer<T>* RingBuffer<T>::CreateMultiProducer(EventFactory<T>* factory,
+                                                    int buffer_size,
+                                                    WaitStrategy* wait_strategy) {
+  Sequencer* sequencer = new MultiProducerSequencer(buffer_size, wait_strategy);
+  return new RingBuffer<T>(factory, sequencer);
+}
+
+template<typename T>
+  RingBuffer<T>* RingBuffer<T>::CreateMultiProducer(EventFactory<T>* factory,
+                                                    int buffer_size) {
+  return CreateMultiProducer(factory, buffer_size, new BlockingWaitStrategy());
+}
 
 template<typename T>
   RingBuffer<T>* RingBuffer<T>::CreateSingleProducer(EventFactory<T>* factory,
