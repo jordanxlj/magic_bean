@@ -71,19 +71,18 @@ TEST_F(BatchEventProcessorTest, should_call_methods_in_lifecycle_order) {
 }
 
 TEST_F(BatchEventProcessorTest, should_call_methods_in_lifecycle_order_for_batch) {
-  EXPECT_CALL(*event_handler, OnEvent(ring_buffer->Get(0), 0, false))
-    .Times(1);
-  EXPECT_CALL(*event_handler, OnEvent(ring_buffer->Get(1), 1, false))
-    .Times(1);
+  InSequence s;
+  EXPECT_CALL(*event_handler, OnEvent(ring_buffer->Get(0), 0, false));
+  EXPECT_CALL(*event_handler, OnEvent(ring_buffer->Get(1), 1, false));
   EXPECT_CALL(*event_handler, OnEvent(ring_buffer->Get(2), 2, true))
     .WillOnce(Invoke(this, &BatchEventProcessorTest::SignalAll));
 
   std::unique_lock<std::mutex> lock(mutex);
-  std::thread thread(std::bind(&BatchEventProcessor<StubEvent>::Run, batch_event_processor));
+  ring_buffer->Publish(ring_buffer->Next());
+  ring_buffer->Publish(ring_buffer->Next());
+  ring_buffer->Publish(ring_buffer->Next());
 
-  ring_buffer->Publish(ring_buffer->Next());
-  ring_buffer->Publish(ring_buffer->Next());
-  ring_buffer->Publish(ring_buffer->Next());
+  std::thread thread(std::bind(&BatchEventProcessor<StubEvent>::Run, batch_event_processor));
 
   cond.wait(lock);
   batch_event_processor->Halt();

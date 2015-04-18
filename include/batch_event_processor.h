@@ -25,6 +25,7 @@
 #include "magic_types.h"
 #include "sequence.h"
 #include "sequence_barrier.h"
+#include <iostream>
 
 namespace magic_bean {
 
@@ -88,7 +89,7 @@ template<typename T>
 void BatchEventProcessor<T>::Run() {
   bool running = false;
   if(!running_.compare_exchange_weak(running, true)) {
-    //throw runtime_error("Thread is already running");
+    throw std::runtime_error("Thread is already running");
   }
 
   sequence_barrier_->ClearAlert();
@@ -100,6 +101,7 @@ void BatchEventProcessor<T>::Run() {
   while(true) {
     try {
       int64_t available_sequence = sequence_barrier_->WaitFor(next_sequence);
+
       while(next_sequence <= available_sequence) {
         event = data_provider_->Get(next_sequence);
         event_handler_->OnEvent(event, next_sequence, next_sequence == available_sequence);
