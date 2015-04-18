@@ -2,6 +2,7 @@
 #define STUB_EVENT_H_
 
 #include "event_factory.h"
+#include "event_translator_one_arg.h"
 
 using namespace magic_bean;
 
@@ -24,6 +25,16 @@ class StubEventFactory : public EventFactory<StubEvent> {
   virtual StubEvent* NewInstance() override {
     return new StubEvent(-1);
   };
+};
+
+class StubEventTranslator : public EventTranslatorOneArg<StubEvent, int> {
+ public:
+  StubEventTranslator() {};
+  ~StubEventTranslator() {};
+
+  virtual void TranslateTo(StubEvent* event, int64_t sequence, int arg0) override {
+    event->SetValue(arg0);
+  }
 };
 
 #endif //STUB_EVENT_H_

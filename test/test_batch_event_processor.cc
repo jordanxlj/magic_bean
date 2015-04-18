@@ -7,17 +7,15 @@
 #include "ring_buffer.h"
 #include "sequence_barrier.h"
 #include "support/stub_event.h"
-#include <stdio.h>
 
 using namespace magic_bean;
-using namespace ::testing;
 
 class MockEventHandler : public EventHandler<StubEvent> {
  public:
   MOCK_METHOD3(OnEvent, void(StubEvent*, int64_t, bool));
 };
 
-class BatchEventProcessorTest : public Test {
+class BatchEventProcessorTest : public ::testing::Test {
  public:
   void SignalAll(StubEvent*, int64_t, bool) {
     std::unique_lock<std::mutex> lock(mutex);
@@ -71,7 +69,7 @@ TEST_F(BatchEventProcessorTest, should_call_methods_in_lifecycle_order) {
 }
 
 TEST_F(BatchEventProcessorTest, should_call_methods_in_lifecycle_order_for_batch) {
-  InSequence s;
+  ::testing::InSequence s;
   EXPECT_CALL(*event_handler, OnEvent(ring_buffer->Get(0), 0, false));
   EXPECT_CALL(*event_handler, OnEvent(ring_buffer->Get(1), 1, false));
   EXPECT_CALL(*event_handler, OnEvent(ring_buffer->Get(2), 2, true))
