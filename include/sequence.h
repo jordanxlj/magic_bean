@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -44,7 +43,7 @@ class Sequence : public RhsPadding {
   Sequence(int64_t initial_value);
   ~Sequence();
 
-  int64_t Get() const;
+  virtual int64_t Get() const;
   void Set(int64_t value);
 
   bool CompareAndSet(int64_t expected_value, int64_t new_value);
