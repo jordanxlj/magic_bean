@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -40,7 +39,7 @@ void Sequence::Set(int64_t value) {
 }
 
 bool Sequence:: CompareAndSet(int64_t expected_value, int64_t new_value) {
-  return value_.compare_exchange_weak(expected_value, new_value);
+  return value_.compare_exchange_strong(expected_value, new_value);
 }
 
 int64_t Sequence::IncrementAndGet() {

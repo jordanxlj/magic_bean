@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -40,18 +39,17 @@ void SequenceGroups::AddSequence(Cursored* cursor, SequencePtr sequence) {
   p->sequence = sequence;
   p->next = head_.load(std::memory_order_relaxed);
 
-  while(!std::atomic_compare_exchange_weak_explicit(&head_, &p->next, p,
-                                                    std::memory_order_release,
-                                                    std::memory_order_relaxed))
-    ;
+  int count = 0;
+  while(!head_.compare_exchange_weak(p->next, p, std::memory_order_release,
+                                     std::memory_order_relaxed)) {
+  }
 }
 
 bool SequenceGroups::RemoveSequence(SequencePtr sequence) {
   auto p = head_.load(std::memory_order_release);
   if(p && p->sequence == sequence
-     && std::atomic_compare_exchange_strong_explicit(&head_, &p, p->next,
-                                                     std::memory_order_acquire,
-                                                     std::memory_order_relaxed)) {
+     && head_.compare_exchange_strong(p, p->next, std::memory_order_acquire,
+                                      std::memory_order_relaxed)) {
     p.reset();
     return true;
   } else
@@ -62,10 +60,13 @@ int64_t SequenceGroups::GetMinimumSequence(int64_t minimum) const {
   auto p = head_.load(std::memory_order_relaxed);
   int64_t minimum_value = minimum;
   while(p) {
+    auto next = p->next;
     if(p->sequence->Get() < minimum_value)
       minimum_value = p->sequence->Get();
-    p = p->next;
+
+    p = next;
   }
+
   return minimum_value;
 }
 

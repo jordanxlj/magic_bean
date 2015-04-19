@@ -4,6 +4,7 @@
 #include <functional>
 #include <thread>
 #include <condition_variable>
+#include "insufficient_capacity_exception.h"
 #include "no_op_event_processor.h"
 #include "sequence.h"
 #include "sequence_barrier.h"
@@ -24,6 +25,7 @@ class RingBufferTest : public ::testing::Test {
     ring_buffer->AddGatingSequences(gating_sequences);
   }
   virtual void TearDown() {
+    ring_buffer->RemoveGatingSequence(event_processor->GetSequence());
     gating_sequences.clear();
     delete event_processor;
     delete sequence_barrier;
@@ -87,7 +89,7 @@ TEST_F(RingBufferTest, should_wrap) {
   }
 }
 
-TEST_F(RingBufferTest, should_prevent_wrapping) {
+TEST(RingBufferTestSuite, should_prevent_wrapping) {
   StubEventFactory factory;
   RingBuffer<StubEvent>* rb = RingBuffer<StubEvent>::CreateMultiProducer(&factory, 4);
 
@@ -102,5 +104,31 @@ TEST_F(RingBufferTest, should_prevent_wrapping) {
 
   ASSERT_FALSE(rb->TryPublishEvent(&translator, 3));
   sequence.reset();
+  delete rb;
+}
+
+TEST(RingBufferTestSuite, should_throw_exception_if_buffer_is_full) {
+  StubEventFactory factory;
+  RingBuffer<StubEvent>* rb = RingBuffer<StubEvent>::CreateMultiProducer(&factory, 32);
+
+  SequencePtr sequence = SequencePtr(new Sequence(rb->GetBufferSize()));
+  std::vector<SequencePtr> gating_sequences;
+  gating_sequences.push_back(sequence);
+  rb->AddGatingSequences(gating_sequences);
+
+  try {
+    for(int i = 0; i < rb->GetBufferSize(); i++)
+      rb->Publish(rb->TryNext());
+  } catch(...) {
+    FAIL() << "should not of thrown exception";
+  }
+
+  try {
+    rb->TryNext();
+    FAIL() << "Exception should have been thrown";
+  } catch(InsufficientCapacityException& ex) {
+    SUCCEED();
+  }
+
   delete rb;
 }

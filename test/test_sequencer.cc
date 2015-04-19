@@ -172,24 +172,22 @@ TEST_P(SequencerTest, should_not_be_available_until_published) {
 }
 
 TEST_P(SequencerTest, should_notify_wait_strategy_on_publish) {
-  MockWaitStrategy* wait_strategy = new MockWaitStrategy;
-  Sequenced* sequencer = NewProducer(producer_type, wait_strategy);
+  MockWaitStrategy wait_strategy;
+  Sequenced* sequencer = NewProducer(producer_type, &wait_strategy);
 
-  EXPECT_CALL(*wait_strategy, SignalAllWhenBlocking());
+  EXPECT_CALL(wait_strategy, SignalAllWhenBlocking());
   sequencer->Publish(sequencer->Next());
   delete sequencer;
-  delete wait_strategy;
 }
 
 TEST_P(SequencerTest, should_notify_wait_strategy_on_publish_batch) {
-  MockWaitStrategy* wait_strategy = new MockWaitStrategy;
-  Sequenced* sequencer = NewProducer(producer_type, wait_strategy);
+  MockWaitStrategy wait_strategy;
+  Sequenced* sequencer = NewProducer(producer_type, &wait_strategy);
 
-  EXPECT_CALL(*wait_strategy, SignalAllWhenBlocking());
+  EXPECT_CALL(wait_strategy, SignalAllWhenBlocking());
   int64_t next = sequencer->Next(4);
   sequencer->Publish(next - (4 - 1), next);
   delete sequencer;
-  delete wait_strategy;
 }
 
 TEST_P(SequencerTest, should_wait_on_publication) {

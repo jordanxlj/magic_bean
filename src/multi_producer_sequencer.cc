@@ -56,8 +56,8 @@ bool MultiProducerSequencer::HasAvailableCapacity(int required_capacity, int64_t
 
   if(wrap_point > cached_gating_sequence || cached_gating_sequence > cursor_value) {
     int64_t min_sequence = GetMinimumSequence(cursor_value);
-
     gating_sequence_cache_->Set(min_sequence);
+
     if(wrap_point > min_sequence)
       return false;
   }
@@ -108,6 +108,7 @@ int64_t MultiProducerSequencer::TryNext(int n) {
 
     if(!HasAvailableCapacity(n, current))
       throw InsufficientCapacityException("not has available capacity");
+
   } while (!cursor_->CompareAndSet(current, next));
 
   return next;
