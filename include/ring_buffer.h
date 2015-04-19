@@ -126,6 +126,8 @@ class RingBuffer : public RingBufferFields<T>, public Cursored, public DataProvi
 
   template<typename A>
     void PublishEvent(EventTranslatorOneArg<T, A>* translator, A arg0);
+  template<typename A>
+    bool TryPublishEvent(EventTranslatorOneArg<T, A>* translator, A arg0);
 
  protected:
   int64_t p1, p2, p3, p4, p5, p6, p7;
@@ -263,6 +265,19 @@ template<typename A>
   int64_t sequence = RingBufferFields<T>::sequencer_->Next();
   translator->TranslateTo(Get(sequence), sequence, arg0);
   RingBufferFields<T>::sequencer_->Publish(sequence);
+}
+
+template<typename T>
+template<typename A>
+  bool RingBuffer<T>::TryPublishEvent(EventTranslatorOneArg<T, A>* translator, A arg0) {
+  try {
+    int64_t sequence = RingBufferFields<T>::sequencer_->TryNext();
+    translator->TranslateTo(Get(sequence), sequence, arg0);
+    RingBufferFields<T>::sequencer_->Publish(sequence);
+    return true;
+  } catch(...) {
+    return false;
+  }
 }
 
 } //end namespace

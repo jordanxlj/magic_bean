@@ -42,7 +42,6 @@ void MultiProducerSequencer::SetAvailableBufferValue(int index, int flag) {
   available_buffer_[index] = flag;
 }
 
-
 MultiProducerSequencer::~MultiProducerSequencer() {
   delete [] available_buffer_;
 }
@@ -54,8 +53,10 @@ bool MultiProducerSequencer::HasAvailableCapacity(int required_capacity) {
 bool MultiProducerSequencer::HasAvailableCapacity(int required_capacity, int64_t cursor_value) {
   int64_t wrap_point = (cursor_value + required_capacity) - buffer_size_;
   int64_t cached_gating_sequence = gating_sequence_cache_->Get();
+
   if(wrap_point > cached_gating_sequence || cached_gating_sequence > cursor_value) {
     int64_t min_sequence = GetMinimumSequence(cursor_value);
+
     gating_sequence_cache_->Set(min_sequence);
     if(wrap_point > min_sequence)
       return false;

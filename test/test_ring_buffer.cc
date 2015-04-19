@@ -86,3 +86,21 @@ TEST_F(RingBufferTest, should_wrap) {
     ASSERT_EQ(ring_buffer->Get(i)->GetValue(), i);
   }
 }
+
+TEST_F(RingBufferTest, should_prevent_wrapping) {
+  StubEventFactory factory;
+  RingBuffer<StubEvent>* rb = RingBuffer<StubEvent>::CreateMultiProducer(&factory, 4);
+
+  SequencePtr sequence = SequencePtr(new Sequence);
+  std::vector<SequencePtr> gating_sequences;
+  gating_sequences.push_back(sequence);
+  rb->AddGatingSequences(gating_sequences);
+
+  StubEventTranslator translator;
+  for(int i = 0; i < 4; i++)
+    rb->PublishEvent(&translator, i);
+
+  ASSERT_FALSE(rb->TryPublishEvent(&translator, 3));
+  sequence.reset();
+  delete rb;
+}
