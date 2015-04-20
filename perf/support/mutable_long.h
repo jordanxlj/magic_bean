@@ -26,6 +26,4 @@ class MutableLong {
   int64_t value_;
 };
 
-} //end namespace
-
-#endif //UTIL_H_
+#endif //MUTABLE_LONG_H_
