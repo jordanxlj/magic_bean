@@ -1,3 +1,4 @@
 .build
 magic_test
+magic_perf
 libmagic*
