@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -17,8 +16,8 @@
 
 #include "yielding_wait_strategy.h"
 #include <thread>
-#include <sequence.h>
-#include <sequence_barrier.h>
+#include "sequence.h"
+#include "sequence_barrier.h"
 
 namespace magic_bean {
 

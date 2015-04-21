@@ -41,6 +41,21 @@
  */
 
 #include "one_to_one_raw_batch_throughput_test.h"
+#include "single_producer_sequencer.h"
+#include "yielding_wait_strategy.h"
+
+static const int BUFFER_SIZE = 1024 * 64;
+static const int64_t ITERATIONS = 1000 * 1000 * 200;
+
+OneToOneRawBatchThroughputTest::OneToOneRawBatchThroughputTest() {
+  wait_strategy_ =  new magic_bean::YieldingWaitStrategy;
+  sequencer_ = new magic_bean::SingleProducerSequencer(BUFFER_SIZE, wait_strategy_);
+}
+
+OneToOneRawBatchThroughputTest::~OneToOneRawBatchThroughputTest() {
+  delete sequencer_;
+  delete wait_strategy_;
+}
 
 int64_t OneToOneRawBatchThroughputTest::RunDisruptorPass() {
   int batch_size = 10;
