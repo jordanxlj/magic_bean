@@ -16,14 +16,13 @@ class OneToOneRawBatchThroughputTest : public AbstractPerfTestDisruptor {
  protected:
   virtual int64_t RunDisruptorPass() override;
  private:
-  void Execute(int64_t expected_count);
-  void WaitForEventProcessorSequence(int64_t expected_count);
+  void Execute(magic_bean::Sequence* sequence, int64_t expected_count);
+  void WaitForEventProcessorSequence(magic_bean::Sequence* sequence, int64_t expected_count);
 
  private:
   magic_bean::Sequencer* sequencer_;
   magic_bean::WaitStrategy* wait_strategy_;
   magic_bean::SequenceBarrier* barrier_;
-  magic_bean::Sequence sequence_;
   std::mutex mutex_;
   std::condition_variable cond_;
 };

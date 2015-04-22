@@ -68,8 +68,9 @@ int64_t OneToOneRawBatchThroughputTest::RunDisruptorPass() {
   int batch_size = 10;
   std::unique_lock<std::mutex> lock(mutex_);
   int64_t expected_count = -1 + (ITERATIONS * batch_size);
+  magic_bean::Sequence sequence;
 
-  std::thread thread(std::bind(&OneToOneRawBatchThroughputTest::Execute, this, expected_count));
+  std::thread thread(std::bind(&OneToOneRawBatchThroughputTest::Execute, this, &sequence, expected_count));
   auto start = std::chrono::high_resolution_clock::now();
   for(int64_t i = 0; i < ITERATIONS; i++) {
     int64_t next = sequencer_->Next(batch_size);
@@ -81,30 +82,31 @@ int64_t OneToOneRawBatchThroughputTest::RunDisruptorPass() {
 
   int64_t ops_per_second = (ITERATIONS * 1000 * batch_size) / (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
-  WaitForEventProcessorSequence(expected_count);
+  WaitForEventProcessorSequence(&sequence, expected_count);
   thread.join();
   return ops_per_second;
 }
 
-void OneToOneRawBatchThroughputTest::Execute(int64_t expected_count) {
+void OneToOneRawBatchThroughputTest::Execute(magic_bean::Sequence* sequence,
+                                             int64_t expected_count) {
   int64_t expected = expected_count;
   int64_t processed = -1;
 
   do {
-    processed = barrier_->WaitFor(sequence_.Get() + 1);
-    sequence_.Set(processed);
+    processed = barrier_->WaitFor(sequence->Get() + 1);
+    sequence->Set(processed);
   } while(processed < expected);
 
   {
     std::unique_lock<std::mutex> lock(mutex_);
     cond_.notify_all();
   }
-  sequence_.Set(processed);
+  sequence->Set(processed);
 }
 
-void OneToOneRawBatchThroughputTest::WaitForEventProcessorSequence(int64_t expected_count) {
+void OneToOneRawBatchThroughputTest::WaitForEventProcessorSequence(magic_bean::Sequence* sequence, int64_t expected_count) {
   std::chrono::milliseconds duration(1000);
-  while(sequence_.Get() != expected_count) {
+  while(sequence->Get() != expected_count) {
     std::this_thread::sleep_for(duration);
   }
 }
