@@ -2,4 +2,4 @@
 c++ implementation of LMAX's disruptor pattern.
 
 Your compiler needs to support C++14 standard in order to use this 
-implementation. Currently only tested with GCC 4.9 on Mac.
+implementation. Currently tested with GCC 4.9 on Mac and Suse Linux.
