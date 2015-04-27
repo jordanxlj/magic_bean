@@ -17,13 +17,15 @@
 #include "sequence_groups.h"
 #include "cursored.h"
 #include "sequence.h"
+#include <algorithm>
 
 namespace magic_bean {
 
-SequenceGroups::SequenceGroups()
-  : head_(nullptr) {}
+SequenceGroups::SequenceGroups() {}
 
-SequenceGroups::~SequenceGroups() {}
+SequenceGroups::~SequenceGroups() {
+  gating_sequences_.clear();
+}
 
 void SequenceGroups::AddSequences(Cursored* cursor,
                                   const std::vector<SequencePtr>& sequences_to_add) {
@@ -34,37 +36,26 @@ void SequenceGroups::AddSequences(Cursored* cursor,
 void SequenceGroups::AddSequence(Cursored* cursor, SequencePtr sequence) {
   int64_t cursor_sequence = cursor->GetCursor();
   sequence->Set(cursor_sequence);
-
-  auto p = std::make_shared<Node>();
-  p->sequence = sequence;
-  p->next = head_.load(std::memory_order_relaxed);
-
-  int count = 0;
-  while(!head_.compare_exchange_weak(p->next, p, std::memory_order_release,
-                                     std::memory_order_relaxed)) {
-  }
+  gating_sequences_.push_back(sequence);
 }
 
 bool SequenceGroups::RemoveSequence(SequencePtr sequence) {
-  auto p = head_.load(std::memory_order_release);
-  if(p && p->sequence == sequence
-     && head_.compare_exchange_strong(p, p->next, std::memory_order_acquire,
-                                      std::memory_order_relaxed)) {
-    p.reset();
+  auto for_removing = std::remove_if(gating_sequences_.begin(), gating_sequences_.end(),
+                                     [&](SequencePtr gating_sequence) {
+                                       return sequence == gating_sequence;
+                                     });
+  if(for_removing != gating_sequences_.end()) {
+    gating_sequences_.erase(for_removing, gating_sequences_.end());
     return true;
   } else
     return false;
 }
 
-int64_t SequenceGroups::GetMinimumSequence(int64_t minimum) const {
-  auto p = head_.load(std::memory_order_relaxed);
+int64_t SequenceGroups::GetMinimumSequence(int64_t minimum) {
   int64_t minimum_value = minimum;
-  while(p) {
-    auto next = p->next;
-    if(p->sequence->Get() < minimum_value)
-      minimum_value = p->sequence->Get();
-
-    p = next;
+  for(auto gating_sequence : gating_sequences_) {
+    if(gating_sequence->Get() < minimum_value)
+      minimum_value = gating_sequence->Get();
   }
 
   return minimum_value;

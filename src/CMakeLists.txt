@@ -1,5 +1,6 @@
 include_directories(${PROJECT_SOURCE_DIR}/include)
 aux_source_directory(. SRC)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/..)
+add_library(magic_s STATIC ${SRC})
 add_library(libmagic SHARED ${SRC})
 set_target_properties(libmagic PROPERTIES OUTPUT_NAME "magic")

@@ -44,6 +44,7 @@
 #include <chrono>
 #include <functional>
 #include <thread>
+#include "sequence.h"
 #include "sequence_barrier.h"
 #include "single_producer_sequencer.h"
 #include "yielding_wait_strategy.h"
@@ -56,9 +57,17 @@ OneToOneRawBatchThroughputTest::OneToOneRawBatchThroughputTest() {
   sequencer_ = new magic_bean::SingleProducerSequencer(BUFFER_SIZE, wait_strategy_);
   std::vector<magic_bean::SequencePtr> sequences_to_track;
   barrier_ = sequencer_->NewBarrier(sequences_to_track);
+
+  sequence_ = magic_bean::SequencePtr(new magic_bean::Sequence);
+  gatings_sequences_.push_back(sequence_);
+
+  sequencer_->AddGatingSequences(gatings_sequences_);
 }
 
 OneToOneRawBatchThroughputTest::~OneToOneRawBatchThroughputTest() {
+  sequencer_->RemoveGatingSequence(sequence_);
+  gatings_sequences_.clear();
+  sequence_.reset();
   delete barrier_;
   delete sequencer_;
   delete wait_strategy_;
@@ -67,10 +76,9 @@ OneToOneRawBatchThroughputTest::~OneToOneRawBatchThroughputTest() {
 int64_t OneToOneRawBatchThroughputTest::RunDisruptorPass() {
   int batch_size = 10;
   std::unique_lock<std::mutex> lock(mutex_);
-  int64_t expected_count = -1 + (ITERATIONS * batch_size);
-  magic_bean::Sequence sequence;
+  int64_t expected_count = sequence_->Get() + (ITERATIONS * batch_size);
 
-  std::thread thread(std::bind(&OneToOneRawBatchThroughputTest::Execute, this, &sequence, expected_count));
+  std::thread thread(std::bind(&OneToOneRawBatchThroughputTest::Execute, this, expected_count));
   auto start = std::chrono::high_resolution_clock::now();
   for(int64_t i = 0; i < ITERATIONS; i++) {
     int64_t next = sequencer_->Next(batch_size);
@@ -82,31 +90,30 @@ int64_t OneToOneRawBatchThroughputTest::RunDisruptorPass() {
 
   int64_t ops_per_second = (ITERATIONS * 1000 * batch_size) / (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
-  WaitForEventProcessorSequence(&sequence, expected_count);
+  WaitForEventProcessorSequence(expected_count);
   thread.join();
   return ops_per_second;
 }
 
-void OneToOneRawBatchThroughputTest::Execute(magic_bean::Sequence* sequence,
-                                             int64_t expected_count) {
+void OneToOneRawBatchThroughputTest::Execute(int64_t expected_count) {
   int64_t expected = expected_count;
   int64_t processed = -1;
 
   do {
-    processed = barrier_->WaitFor(sequence->Get() + 1);
-    sequence->Set(processed);
+    processed = barrier_->WaitFor(sequence_->Get() + 1);
+    sequence_->Set(processed);
   } while(processed < expected);
 
   {
     std::unique_lock<std::mutex> lock(mutex_);
     cond_.notify_all();
   }
-  sequence->Set(processed);
+  sequence_->Set(processed);
 }
 
-void OneToOneRawBatchThroughputTest::WaitForEventProcessorSequence(magic_bean::Sequence* sequence, int64_t expected_count) {
+void OneToOneRawBatchThroughputTest::WaitForEventProcessorSequence(int64_t expected_count) {
   std::chrono::milliseconds duration(1000);
-  while(sequence->Get() != expected_count) {
+  while(sequence_->Get() != expected_count) {
     std::this_thread::sleep_for(duration);
   }
 }

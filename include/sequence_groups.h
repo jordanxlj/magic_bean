@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -18,7 +17,7 @@
 #ifndef SEQUENCE_GROUPS_H_
 #define SEQUENCE_GROUPS_H_
 
-#include <atomic>
+#include <list>
 #include <vector>
 #include "magic_types.h"
 #include "sequence.h"
@@ -28,11 +27,6 @@ namespace magic_bean {
 class Cursored;
 
 class SequenceGroups {
-  struct Node {
-    SequencePtr sequence;
-    std::shared_ptr<Node> next;
-  };
-
  public:
   SequenceGroups();
   ~SequenceGroups();
@@ -40,13 +34,13 @@ class SequenceGroups {
   void AddSequences(Cursored* cursor, const std::vector<SequencePtr>& sequences_to_add);
   bool RemoveSequence(SequencePtr sequence);
 
-  int64_t GetMinimumSequence(int64_t minimum) const;
+  int64_t GetMinimumSequence(int64_t minimum);
 
  private:
   void AddSequence(Cursored* cursor, SequencePtr sequence);
 
  private:
-   std::atomic<std::shared_ptr<Node>> head_;
+  std::list<SequencePtr> gating_sequences_;
 };
 
 } //end namespace
