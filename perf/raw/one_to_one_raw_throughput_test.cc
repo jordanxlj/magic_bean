@@ -40,7 +40,7 @@
  *
  */
 
-#include "one_to_one_raw_batch_throughput_test.h"
+#include "one_to_one_raw_throughput_test.h"
 #include <chrono>
 #include <functional>
 #include <thread>
@@ -52,7 +52,7 @@
 static const int BUFFER_SIZE = 1024 * 64;
 static const int64_t ITERATIONS = 1000 * 1000 * 200;
 
-OneToOneRawBatchThroughputTest::OneToOneRawBatchThroughputTest() {
+OneToOneRawThroughputTest::OneToOneRawThroughputTest() {
   wait_strategy_ =  new magic_bean::YieldingWaitStrategy;
   sequencer_ = new magic_bean::SingleProducerSequencer(BUFFER_SIZE, wait_strategy_);
   std::vector<magic_bean::SequencePtr> sequences_to_track;
@@ -64,7 +64,7 @@ OneToOneRawBatchThroughputTest::OneToOneRawBatchThroughputTest() {
   sequencer_->AddGatingSequences(gatings_sequences_);
 }
 
-OneToOneRawBatchThroughputTest::~OneToOneRawBatchThroughputTest() {
+OneToOneRawThroughputTest::~OneToOneRawThroughputTest() {
   sequencer_->RemoveGatingSequence(sequence_);
   gatings_sequences_.clear();
   sequence_.reset();
@@ -73,16 +73,16 @@ OneToOneRawBatchThroughputTest::~OneToOneRawBatchThroughputTest() {
   delete wait_strategy_;
 }
 
-int64_t OneToOneRawBatchThroughputTest::RunDisruptorPass() {
+int64_t OneToOneRawThroughputTest::RunDisruptorPass() {
   int batch_size = 10;
   std::unique_lock<std::mutex> lock(mutex_);
-  int64_t expected_count = sequence_->Get() + (ITERATIONS * batch_size);
+  int64_t expected_count = sequence_->Get() + ITERATIONS;
 
-  std::thread thread(std::bind(&OneToOneRawBatchThroughputTest::Execute, this, expected_count));
+  std::thread thread(std::bind(&OneToOneRawThroughputTest::Execute, this, expected_count));
   auto start = std::chrono::high_resolution_clock::now();
   for(int64_t i = 0; i < ITERATIONS; i++) {
-    int64_t next = sequencer_->Next(batch_size);
-    sequencer_->Publish((next - (batch_size - 1)), next);
+    int64_t next = sequencer_->Next();
+    sequencer_->Publish(next);
   }
 
   cond_.wait(lock);
@@ -95,7 +95,7 @@ int64_t OneToOneRawBatchThroughputTest::RunDisruptorPass() {
   return ops_per_second;
 }
 
-void OneToOneRawBatchThroughputTest::Execute(int64_t expected_count) {
+void OneToOneRawThroughputTest::Execute(int64_t expected_count) {
   int64_t expected = expected_count;
   int64_t processed = -1;
 
@@ -111,17 +111,15 @@ void OneToOneRawBatchThroughputTest::Execute(int64_t expected_count) {
   sequence_->Set(processed);
 }
 
-void OneToOneRawBatchThroughputTest::WaitForEventProcessorSequence(int64_t expected_count) {
+void OneToOneRawThroughputTest::WaitForEventProcessorSequence(int64_t expected_count) {
   std::chrono::milliseconds duration(1000);
   while(sequence_->Get() != expected_count) {
     std::this_thread::sleep_for(duration);
   }
 }
 
-/*
 int main() {
-  OneToOneRawBatchThroughputTest test;
+  OneToOneRawThroughputTest test;
   test.TestImplementations();
   return 0;
 }
-*/
