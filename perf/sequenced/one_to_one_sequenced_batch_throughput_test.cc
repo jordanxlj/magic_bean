@@ -52,7 +52,7 @@
 static const int BATCH_SIZE = 10;
 static const int BUFFER_SIZE = 1024 * 64;
 static const int64_t ITERATIONS = 1000 * 1000 * 100;
-static const int64_t EXPECTED_RESULT = PerfTestUtil::AccumulateAddition(ITERATIONS);
+static const int64_t EXPECTED_RESULT = PerfTestUtil::AccumulateAddition(ITERATIONS) * BATCH_SIZE;
 
 OneToOneSequencedBatchThroughputTest::OneToOneSequencedBatchThroughputTest() {
   wait_strategy_ =  new magic_bean::YieldingWaitStrategy;

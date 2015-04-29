@@ -11,7 +11,10 @@ class ValueAdditionEventHandler : public magic_bean::EventHandler<ValueEvent> {
  public:
   ValueAdditionEventHandler() {};
   int64_t GetValue() { return value_.Get(); }
-  void Reset(int64_t expected_count) { count_ = expected_count; }
+  void Reset(int64_t expected_count) {
+    value_.Set(0);
+    count_ = expected_count;
+  }
 
   void Wait() {
     std::unique_lock<std::mutex> lock(mutex_);
