@@ -18,7 +18,6 @@ class OneToOneSequencedBatchThroughputTest : public AbstractPerfTestDisruptor {
  protected:
   virtual int64_t RunDisruptorPass() override;
  private:
-  void Execute(int64_t expected_count);
   void WaitForEventProcessorSequence(int64_t expected_count);
 
  private:

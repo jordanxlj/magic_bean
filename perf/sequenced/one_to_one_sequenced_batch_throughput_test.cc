@@ -108,8 +108,10 @@ void OneToOneSequencedBatchThroughputTest::WaitForEventProcessorSequence(int64_t
   }
 }
 
+/*
 int main() {
   OneToOneSequencedBatchThroughputTest test;
   test.TestImplementations();
   return 0;
 }
+*/

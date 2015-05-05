@@ -113,7 +113,7 @@ class RingBuffer : public RingBufferFields<T>, public Cursored, public DataProvi
   int64_t GetMinimumGatingSequence();
 
   SequenceBarrier* NewBarrier(const std::vector<SequencePtr>& sequences_to_track);
-  EventPoller<T>* NewPoller(std::vector<SequencePtr>& gating_sequences);
+  EventPoller<T>* NewPoller(const std::vector<SequencePtr>& gating_sequences);
 
   virtual int64_t GetCursor() override;
   int GetBufferSize() const;
@@ -225,8 +225,8 @@ template<typename T>
 }
 
 template<typename T>
-  EventPoller<T>* RingBuffer<T>::NewPoller(std::vector<SequencePtr>& gating_sequences) {
-  return RingBufferFields<T>::sequencer_->NewPoller(this, gating_sequences);
+  EventPoller<T>* RingBuffer<T>::NewPoller(const std::vector<SequencePtr>& gating_sequences) {
+  return static_cast<AbstractSequencer*>(RingBufferFields<T>::sequencer_)->NewPoller(this, gating_sequences);
 }
 
 template<typename T>

@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 jordanxlj
  *
@@ -58,12 +57,6 @@ int64_t AbstractSequencer::GetMinimumSequence() const {
 
 int64_t AbstractSequencer::GetMinimumSequence(int64_t minimum) const {
   return sequence_groups_->GetMinimumSequence(minimum);
-}
-
-template<typename T>
-EventPoller<T> AbstractSequencer::NewPoller(DataProvider<T>* provider,
-                                            const std::vector<SequencePtr>& gating_sequences) {
-  return EventPoller<T>::NewInstance(provider, this, new Sequence, cursor_, gating_sequences);
 }
 
 } //end namespace

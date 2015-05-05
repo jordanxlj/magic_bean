@@ -43,14 +43,20 @@ class AbstractSequencer : public Sequencer {
   int64_t GetMinimumSequence(int64_t minimum) const;
 
   template<typename T>
-    EventPoller<T> NewPoller(DataProvider<T>* provider,
-                             const std::vector<SequencePtr>& gating_sequences);
+    EventPoller<T>* NewPoller(DataProvider<T>* provider,
+                              const std::vector<SequencePtr>& gating_sequences);
  protected:
   int buffer_size_;
   WaitStrategy* wait_strategy_;
   SequencePtr cursor_;
   SequenceGroups* sequence_groups_;
 };
+
+template<typename T>
+  EventPoller<T>* AbstractSequencer::NewPoller(DataProvider<T>* provider, const std::vector<SequencePtr>& gating_sequences) {
+  return EventPoller<T>::NewInstance(provider, static_cast<Sequencer*>(this),
+                                     SequencePtr(new Sequence), cursor_, gating_sequences);
+}
 
 } //end namespace
 
