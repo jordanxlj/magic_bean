@@ -14,17 +14,20 @@ class ValueAdditionEventHandler : public magic_bean::EventHandler<ValueEvent> {
   void Reset(int64_t expected_count) {
     value_.Set(0);
     count_ = expected_count;
+    ready_ = false;
   }
 
   void Wait() {
     std::unique_lock<std::mutex> lock(mutex_);
-    cond_.wait(lock);
+    if(!ready_)
+      cond_.wait(lock);
   }
 
   virtual void OnEvent(ValueEvent* event, int64_t sequence, bool end_of_batch) {
     value_.Set(value_.Get() + event->GetValue());
     if(count_ == sequence) {
       std::unique_lock<std::mutex> lock(mutex_);
+      ready_ = true;
       cond_.notify_all();
     }
   }
@@ -34,6 +37,7 @@ class ValueAdditionEventHandler : public magic_bean::EventHandler<ValueEvent> {
   PaddedLong value_;
   std::mutex mutex_;
   std::condition_variable cond_;
+  bool ready_;
 };
 
 #endif //VALUE_ADDITION_EVENT_HANDLER_H_
