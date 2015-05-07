@@ -32,7 +32,7 @@ class FizzBuzzEventHandler : public magic_bean::EventHandler<FizzBuzzEvent> {
       cond_.wait(lock);
   }
 
-  virtual void OnEvent(ValueEvent* event, int64_t sequence, bool end_of_batch) {
+  virtual void OnEvent(FizzBuzzEvent* event, int64_t sequence, bool end_of_batch) {
     switch(fizz_buzz_step_) {
     case FizzBuzzStep::FIZZ:
       if(event->GetValue() % 3 == 0)

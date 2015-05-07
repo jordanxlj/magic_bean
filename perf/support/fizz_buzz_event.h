@@ -26,8 +26,8 @@ class FizzBuzzEventFactory : public magic_bean::EventFactory<FizzBuzzEvent> {
   FizzBuzzEventFactory() {}
   ~FizzBuzzEventFactory() {}
 
-  virtual ValueEvent* NewInstance() override {
-    return new FizzBuzzEventFactory();
+  virtual FizzBuzzEvent* NewInstance() override {
+    return new FizzBuzzEvent();
   };
 };
 

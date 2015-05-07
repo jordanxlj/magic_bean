@@ -106,8 +106,10 @@ void OneToOneSequencedThroughputTest::WaitForEventProcessorSequence(int64_t expe
   }
 }
 
+/*
 int main() {
   OneToOneSequencedThroughputTest test;
   test.TestImplementations();
   return 0;
 }
+*/
