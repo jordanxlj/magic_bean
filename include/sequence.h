@@ -41,14 +41,14 @@ class Sequence : public RhsPadding {
  public:
   Sequence();
   Sequence(int64_t initial_value);
-  ~Sequence();
+  virtual ~Sequence();
 
   virtual int64_t Get() const;
-  void Set(int64_t value);
+  virtual void Set(int64_t value);
 
-  bool CompareAndSet(int64_t expected_value, int64_t new_value);
-  int64_t IncrementAndGet();
-  int64_t AddAndGet(int64_t increment);
+  virtual bool CompareAndSet(int64_t expected_value, int64_t new_value);
+  virtual int64_t IncrementAndGet();
+  virtual int64_t AddAndGet(int64_t increment);
 };
 
 } //end namespace

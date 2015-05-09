@@ -15,6 +15,7 @@
  */
 
 #include "processing_sequence_barrier.h"
+#include "fixed_sequence_group.h"
 #include "sequencer.h"
 #include "wait_strategy.h"
 
@@ -31,6 +32,7 @@ ProcessingSequenceBarrier::ProcessingSequenceBarrier(Sequencer* sequencer,
   if(dependent_sequences.size() == 0) {
     dependent_sequence_ = cursor_sequence;
   } else {
+    dependent_sequence_ = SequencePtr(new FixedSequenceGroup(dependent_sequences));
   }
 }
 

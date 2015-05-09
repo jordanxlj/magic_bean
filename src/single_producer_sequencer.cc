@@ -19,7 +19,6 @@
 #include "insufficient_capacity_exception.h"
 #include "sequence_groups.h"
 #include "wait_strategy.h"
-#include <iostream>
 
 namespace magic_bean {
 
@@ -71,7 +70,6 @@ int64_t SingleProducerSequencer::Next(int n) {
   int64_t cached_gating_sequence = cached_value_;
 
   if(wrap_point > cached_gating_sequence || cached_gating_sequence > next_value) {
-    //std::cout << "wrap : " << wrap_point << ", next : " << next_value << std::endl;
     int64_t min_sequence;
     while(wrap_point > (min_sequence = GetMinimumSequence(next_value)))
       ;

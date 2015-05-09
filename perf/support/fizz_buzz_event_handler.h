@@ -35,16 +35,19 @@ class FizzBuzzEventHandler : public magic_bean::EventHandler<FizzBuzzEvent> {
   virtual void OnEvent(FizzBuzzEvent* event, int64_t sequence, bool end_of_batch) {
     switch(fizz_buzz_step_) {
     case FizzBuzzStep::FIZZ:
-      if(event->GetValue() % 3 == 0)
+      if(event->GetValue() % 3 == 0) {
         event->SetFizz(true);
+      }
       break;
     case FizzBuzzStep::BUZZ:
-      if(event->GetValue() % 5 == 0)
+      if(event->GetValue() % 5 == 0) {
         event->SetBuzz(true);
+      }
       break;
     case FizzBuzzStep::FIZZ_BUZZ:
-      if(event->IsFizz() && event->IsBuzz())
+      if(event->IsFizz() && event->IsBuzz()) {
         fizz_buzz_counter_.Set(fizz_buzz_counter_.Get() + 1);
+      }
       break;
     }
     if(count_ == sequence) {

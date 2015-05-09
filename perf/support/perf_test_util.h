@@ -2,6 +2,7 @@
 #define PERF_TEST_UTIL_H_
 
 #include <cstdint>
+#include <iostream>
 #include <stdexcept>
 
 class PerfTestUtil {
@@ -13,8 +14,10 @@ class PerfTestUtil {
     return result;
   }
   static void FailIfNot(int64_t a, int64_t b) {
-    if(a != b)
+    if(a != b) {
+      std::cout << "a : " << a << ", b : " << b << std::endl;
       throw std::runtime_error("Failed");
+    }
   }
 };
 

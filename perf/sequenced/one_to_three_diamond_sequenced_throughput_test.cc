@@ -51,9 +51,21 @@
 #include "single_producer_sequencer.h"
 #include "yielding_wait_strategy.h"
 
+int64_t CalculateExpected();
 static const int BUFFER_SIZE = 1024 * 8;
 static const int64_t ITERATIONS = 1000 * 1000 * 100;
-static int64_t EXPECTED_RESULT = 0;
+static int64_t EXPECTED_RESULT = CalculateExpected();
+
+int64_t CalculateExpected() {
+  int64_t result = 0;
+  for(int64_t i = 0; i < ITERATIONS; i++) {
+    bool fizz = (i % 3) == 0;
+    bool buzz = (i % 5) == 0;
+    if(fizz && buzz)
+      ++result;
+  }
+  return result;
+}
 
 OneToThreeDiamondSequencedThroughputTest::OneToThreeDiamondSequencedThroughputTest() {
   wait_strategy_ =  new magic_bean::YieldingWaitStrategy;
@@ -94,42 +106,38 @@ OneToThreeDiamondSequencedThroughputTest::~OneToThreeDiamondSequencedThroughputT
 }
 
 int64_t OneToThreeDiamondSequencedThroughputTest::RunDisruptorPass() {
-  /*
-  int batch_size = 10;
-  int64_t expected_count = batch_event_processor_->GetSequence()->Get() + (ITERATIONS * batch_size);
-  handler_.Reset(expected_count);
+  int64_t expected_count = batch_processor_fizz_buzz_->GetSequence()->Get() + ITERATIONS;
+  fizz_buzz_handler_->Reset(expected_count);
 
-  std::thread thread(std::bind(&magic_bean::BatchEventProcessor<ValueEvent>::Run, batch_event_processor_));
+  std::thread fizz_thread(std::bind(&magic_bean::BatchEventProcessor<FizzBuzzEvent>::Run,
+                                    batch_processor_fizz_));
+  std::thread buzz_thread(std::bind(&magic_bean::BatchEventProcessor<FizzBuzzEvent>::Run,
+                                    batch_processor_buzz_));
+  std::thread fizz_buzz_thread(std::bind(&magic_bean::BatchEventProcessor<FizzBuzzEvent>::Run,
+                                         batch_processor_fizz_buzz_));
+
   auto start = std::chrono::high_resolution_clock::now();
   for(int64_t i = 0; i < ITERATIONS; i++) {
-    int64_t hi = ring_buffer_->Next(batch_size);
-    int64_t lo = hi - (batch_size - 1);
-    for(int64_t l = lo; l <= hi; l++)
-      ring_buffer_->Get(l)->SetValue(i);
-    ring_buffer_->Publish(lo, hi);
+    int64_t sequence = ring_buffer_->Next();
+    ring_buffer_->Get(sequence)->SetValue(i);
+    ring_buffer_->Publish(sequence);
   }
 
-  handler_.Wait();
+  fizz_buzz_handler_->Wait();
   auto end = std::chrono::high_resolution_clock::now();
 
-  int64_t ops_per_second = (ITERATIONS * 1000 * batch_size) / (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+  int64_t ops_per_second = (ITERATIONS * 1000) / (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
-  WaitForEventProcessorSequence(expected_count);
-  batch_event_processor_->Halt();
-  thread.join();
-  PerfTestUtil::FailIfNot(EXPECTED_RESULT, handler_.GetValue());
+  batch_processor_fizz_->Halt();
+  batch_processor_buzz_->Halt();
+  batch_processor_fizz_buzz_->Halt();
+
+  fizz_thread.join();
+  buzz_thread.join();
+  fizz_buzz_thread.join();
+
+  PerfTestUtil::FailIfNot(EXPECTED_RESULT, fizz_buzz_handler_->GetFizzBuzzCounter());
   return ops_per_second;
-  */
-  return 0;
-}
-
-void OneToThreeDiamondSequencedThroughputTest::WaitForEventProcessorSequence(int64_t expected_count) {
-  /*
-  std::chrono::milliseconds duration(1000);
-  while(batch_event_processor_->GetSequence()->Get() != expected_count) {
-    std::this_thread::sleep_for(duration);
-  }
-  */
 }
 
 int main() {

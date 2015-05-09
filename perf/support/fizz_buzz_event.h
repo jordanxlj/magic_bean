@@ -7,7 +7,7 @@ class FizzBuzzEvent {
  public:
   FizzBuzzEvent() {};
   int64_t GetValue() const { return value_; }
-  void SetValue(int64_t value) { value_ = value; }
+  void SetValue(int64_t value) { value_ = value; fizz_ = buzz_ = false; }
 
   bool IsFizz() { return fizz_; }
   void SetFizz(bool fizz) { fizz_ = fizz; }
