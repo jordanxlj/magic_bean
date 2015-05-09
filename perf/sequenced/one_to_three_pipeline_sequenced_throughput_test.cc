@@ -141,8 +141,10 @@ int64_t OneToThreePipelineSequencedThroughputTest::RunDisruptorPass() {
   return ops_per_second;
 }
 
+/*
 int main() {
   OneToThreePipelineSequencedThroughputTest test;
   test.TestImplementations();
   return 0;
 }
+*/

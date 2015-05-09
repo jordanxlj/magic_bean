@@ -17,8 +17,6 @@ class OneToThreePipelineSequencedThroughputTest : public AbstractPerfTestDisrupt
   ~OneToThreePipelineSequencedThroughputTest();
  protected:
   virtual int64_t RunDisruptorPass() override;
- private:
-  void WaitForEventProcessorSequence(int64_t expected_count);
 
  private:
   magic_bean::RingBuffer<FunctionEvent>* ring_buffer_;
