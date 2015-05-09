@@ -51,12 +51,12 @@
 #include "single_producer_sequencer.h"
 #include "yielding_wait_strategy.h"
 
-int64_t CalculateExpected();
+static int64_t CalculateExpected();
 static const int BUFFER_SIZE = 1024 * 8;
 static const int64_t ITERATIONS = 1000 * 1000 * 100;
 static int64_t EXPECTED_RESULT = CalculateExpected();
 
-int64_t CalculateExpected() {
+static int64_t CalculateExpected() {
   int64_t result = 0;
   for(int64_t i = 0; i < ITERATIONS; i++) {
     bool fizz = (i % 3) == 0;
@@ -140,8 +140,10 @@ int64_t OneToThreeDiamondSequencedThroughputTest::RunDisruptorPass() {
   return ops_per_second;
 }
 
+/*
 int main() {
   OneToThreeDiamondSequencedThroughputTest test;
   test.TestImplementations();
   return 0;
 }
+*/
