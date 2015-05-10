@@ -49,14 +49,14 @@
 #include "support/perf_test_util.h"
 #include "sequence_barrier.h"
 #include "single_producer_sequencer.h"
-#include "yielding_wait_strategy.h"
+#include "busy_spin_wait_strategy.h"
 
 static const int BUFFER_SIZE = 1024 * 64;
 static const int64_t ITERATIONS = 1000 * 1000 * 100;
 static const int NUM_PUBLISHERS = 3;
 
 ThreeToOneSequencedBatchThroughputTest::ThreeToOneSequencedBatchThroughputTest() {
-  wait_strategy_ =  new magic_bean::YieldingWaitStrategy;
+  wait_strategy_ =  new magic_bean::BusySpinWaitStrategy;
   ring_buffer_ = magic_bean::RingBuffer<ValueEvent>::CreateSingleProducer(&event_factory_, BUFFER_SIZE, wait_strategy_);
   std::vector<magic_bean::SequencePtr> sequences_to_track;
   barrier_ = ring_buffer_->NewBarrier(sequences_to_track);
