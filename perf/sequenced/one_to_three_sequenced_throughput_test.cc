@@ -138,8 +138,10 @@ int64_t OneToThreeSequencedThroughputTest::RunDisruptorPass() {
   return ops_per_second;
 }
 
+/*
 int main() {
   OneToThreeSequencedThroughputTest test;
   test.TestImplementations();
   return 0;
 }
+*/
