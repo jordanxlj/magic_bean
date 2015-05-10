@@ -57,7 +57,7 @@ static const int NUM_PUBLISHERS = 3;
 
 ThreeToOneSequencedBatchThroughputTest::ThreeToOneSequencedBatchThroughputTest() {
   wait_strategy_ =  new magic_bean::BusySpinWaitStrategy;
-  ring_buffer_ = magic_bean::RingBuffer<ValueEvent>::CreateSingleProducer(&event_factory_, BUFFER_SIZE, wait_strategy_);
+  ring_buffer_ = magic_bean::RingBuffer<ValueEvent>::CreateMultiProducer(&event_factory_, BUFFER_SIZE, wait_strategy_);
   std::vector<magic_bean::SequencePtr> sequences_to_track;
   barrier_ = ring_buffer_->NewBarrier(sequences_to_track);
 
