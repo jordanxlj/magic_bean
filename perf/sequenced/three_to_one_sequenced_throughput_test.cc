@@ -41,7 +41,7 @@
  *
  */
 
-#include "three_to_one_sequenced_batch_throughput_test.h"
+#include "three_to_one_sequenced_throughput_test.h"
 #include <chrono>
 #include <future>
 #include <functional>
@@ -52,10 +52,10 @@
 #include "busy_spin_wait_strategy.h"
 
 static const int BUFFER_SIZE = 1024 * 64;
-static const int64_t ITERATIONS = 1000 * 1000 * 100;
+static const int64_t ITERATIONS = 1000 * 1000 * 20;
 static const int NUM_PUBLISHERS = 3;
 
-ThreeToOneSequencedBatchThroughputTest::ThreeToOneSequencedBatchThroughputTest() {
+ThreeToOneSequencedThroughputTest::ThreeToOneSequencedThroughputTest() {
   wait_strategy_ =  new magic_bean::BusySpinWaitStrategy;
   ring_buffer_ = magic_bean::RingBuffer<ValueEvent>::CreateMultiProducer(&event_factory_, BUFFER_SIZE, wait_strategy_);
   std::vector<magic_bean::SequencePtr> sequences_to_track;
@@ -63,13 +63,13 @@ ThreeToOneSequencedBatchThroughputTest::ThreeToOneSequencedBatchThroughputTest()
 
   batch_processor_ = new magic_bean::BatchEventProcessor<ValueEvent>(ring_buffer_, barrier_, &handler_);
   for(int i = 0; i < NUM_PUBLISHERS; i++)
-    value_publishers_[i] = new ValueBatchPublisher(ring_buffer_, ITERATIONS/NUM_PUBLISHERS, 10);
+    value_publishers_[i] = new ValuePublisher(ring_buffer_, ITERATIONS/NUM_PUBLISHERS);
 
   gatings_sequences_.push_back(batch_processor_->GetSequence());
   ring_buffer_->AddGatingSequences(gatings_sequences_);
 }
 
-ThreeToOneSequencedBatchThroughputTest::~ThreeToOneSequencedBatchThroughputTest() {
+ThreeToOneSequencedThroughputTest::~ThreeToOneSequencedThroughputTest() {
   ring_buffer_->RemoveGatingSequence(batch_processor_->GetSequence());
   gatings_sequences_.clear();
   for(int i = 0; i < NUM_PUBLISHERS; i++)
@@ -81,13 +81,13 @@ ThreeToOneSequencedBatchThroughputTest::~ThreeToOneSequencedBatchThroughputTest(
   delete wait_strategy_;
 }
 
-int64_t ThreeToOneSequencedBatchThroughputTest::RunDisruptorPass() {
+int64_t ThreeToOneSequencedThroughputTest::RunDisruptorPass() {
   int64_t expected_count = batch_processor_->GetSequence()->Get() + (ITERATIONS / NUM_PUBLISHERS) * NUM_PUBLISHERS;
   handler_.Reset(expected_count);
 
   std::future<void> futures[NUM_PUBLISHERS];
   for(int i = 0; i < NUM_PUBLISHERS; i++)
-    futures[i] = std::async(std::bind(&ValueBatchPublisher::Run, value_publishers_[i]));
+    futures[i] = std::async(std::bind(&ValuePublisher::Run, value_publishers_[i]));
   std::thread thread(std::bind(&magic_bean::BatchEventProcessor<ValueEvent>::Run,
                                batch_processor_));
 
@@ -110,10 +110,8 @@ int64_t ThreeToOneSequencedBatchThroughputTest::RunDisruptorPass() {
   return ops_per_second;
 }
 
-/*
 int main() {
-  ThreeToOneSequencedBatchThroughputTest test;
+  ThreeToOneSequencedThroughputTest test;
   test.TestImplementations();
   return 0;
 }
-*/
